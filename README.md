@@ -6,6 +6,7 @@ Next steps ("big picture"):
     + Define reify and reflect
     + ...
     + Define normalization function
+1. Define Reducibility for types
 
 2. Define (small-step) operational semantics
 
