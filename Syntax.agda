@@ -1,6 +1,7 @@
-open import Agda.Builtin.Nat using (Nat; suc; zero)
-
 module Syntax where
+
+open import Prelude
+
 
 -- κ := * | κ → κ
 data Kind : Set where

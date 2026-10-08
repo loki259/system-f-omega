@@ -1,10 +1,10 @@
-{-# OPTIONS --allow-unsolved-metas #-}
-
 module Kinding where
 
 open import Relation.Binary.Definitions using (DecidableEquality)
+
 open import Prelude
 open import Syntax
+open import Context
 
 
 KindCtx : Set
