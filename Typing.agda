@@ -16,9 +16,6 @@ TypeCtx = Ctx Type
 variable
   Γ : TypeCtx
 
-postulate
-  --                    τ        α.t            t[τ/α]
-  instantiate : Type → Type → Type
 
 infix 3 _≡ₜ_
 data _≡ₜ_ : Type → Type → Set where
@@ -29,52 +26,45 @@ data _≡ₜ_ : Type → Type → Set where
   all    : ∀ {κ τ τ'} → τ ≡ₜ τ' → all κ τ ≡ₜ all κ τ'
   lam    : ∀ {κ τ τ'} → τ ≡ₜ τ' → lam κ τ ≡ₜ lam κ τ'
   app    : ∀ {τ₁ τ₁' τ₂ τ₂'} → τ₁ ≡ₜ τ₁' → τ₂ ≡ₜ τ₂' → app τ₁ τ₂ ≡ₜ app τ₁' τ₂'
-  beta   : ∀ {κ τ τ'} → app (lam κ τ) τ' ≡ₜ instantiate τ' τ
+  beta   : ∀ {κ τ τₛ} → app (lam κ τ) τₛ ≡ₜ τ [ τₛ ]
 
-lemmaCastKinding : ∀ {τ τ'} → τ ≡ₜ τ' → Δ ⊢ τ ∶ ⋆ → Δ ⊢ τ' ∶ ⋆
-lemmaCastKinding = {!   !}
+infix 3 _,_⊢_∶_
+data _,_⊢_∶_ (Δ : KindCtx) (Γ : TypeCtx) : Term → Type → Set where
+  var : ∀ {x τ}
+    → Γ ∋ x ↦ τ
+    → Δ ⊢ τ ∶ ⋆
+    → Δ , Γ ⊢ var x ∶ τ
+  lam : ∀ {τ τ' t}
+    → Δ ⊢ τ ∶ ⋆
+    → Δ , (τ ∷ Γ) ⊢ t ∶ τ'
+    → Δ ⊢ fun τ τ' ∶ ⋆
+    → Δ , Γ ⊢ lam τ t ∶ fun τ τ'
+  app : ∀ {τ τ' t t'}
+    → Δ , Γ ⊢ t ∶ fun τ τ'
+    → Δ , Γ ⊢ t' ∶ τ
+    → Δ ⊢ τ' ∶ ⋆
+    → Δ , Γ ⊢ app t t' ∶ τ'
+  tlam : ∀ {κ τ t}
+    → κ ∷ Δ , Γ ⊢ t ∶ τ
+    → Δ ⊢ all κ τ ∶ ⋆
+    → Δ , Γ ⊢ tlam κ t ∶ all κ τ
+  tapp : ∀ {κ τ t τₛ}
+    → Δ , Γ ⊢ t ∶ all κ τ
+    → Δ ⊢ τₛ ∶ κ
+    → Δ ⊢ τ [ τₛ ] ∶ ⋆
+    → Δ , Γ ⊢ tapp t τ ∶ τ [ τₛ ]
+  cast : ∀ {t τ τ'}
+    → τ ≡ₜ τ'
+    → Δ , Γ ⊢ t ∶ τ
+    → Δ , Γ ⊢ t ∶ τ'
 
-mutual
-  infix 3 _,_⊢_∶_
-  data _,_⊢_∶_ (Δ : KindCtx) (Γ : TypeCtx) : Term → Type → Set where
-    var : ∀ {x τ}
-      → Γ ∋ x ↦ τ
-      → Δ ⊢ τ ∶ ⋆
-      → Δ , Γ ⊢ var x ∶ τ
-    lam : ∀ {τ τ' t}
-      → Δ ⊢ τ ∶ ⋆
-      → Δ , (τ ∷ Γ) ⊢ t ∶ τ'
-      → Δ ⊢ fun τ τ' ∶ ⋆
-      → Δ , Γ ⊢ lam τ t ∶ fun τ τ'
-    app : ∀ {τ τ' t t'}
-      → Δ , Γ ⊢ t ∶ fun τ τ'
-      → Δ , Γ ⊢ t' ∶ τ
-      → Δ ⊢ τ' ∶ ⋆
-      → Δ , Γ ⊢ app t t' ∶ τ'
-    tlam : ∀ {κ τ t}
-      → κ ∷ Δ , Γ ⊢ t ∶ τ
-      → Δ ⊢ all κ τ ∶ ⋆
-      → Δ , Γ ⊢ tlam κ t ∶ all κ τ
-    tapp : ∀ {κ τ' t τ}
-      → (a : Δ , Γ ⊢ t ∶ all κ τ')
-      → (b : Δ ⊢ τ ∶ κ)
-      → Δ ⊢ (lemma (presupposition a) [ b ]) .proj₁ ∶ ⋆
-      → Δ , Γ ⊢ tapp t τ ∶ (lemma (presupposition a) [ b ]) .proj₁
-    cast : ∀ {t τ τ'}
-      → τ ≡ₜ τ'
-      → Δ , Γ ⊢ t ∶ τ
-      → Δ , Γ ⊢ t ∶ τ'
-
-  presupposition : ∀ {Δ Γ t τ} → Δ , Γ ⊢ t ∶ τ → Δ ⊢ τ ∶ ⋆
-  presupposition (var x x₁) = x₁
-  presupposition (lam x d x₁) = x₁
-  presupposition (app d d₁ x) = x
-  presupposition (tlam d x) = x
-  presupposition (tapp d b x) = x
-  presupposition (cast x d) = lemmaCastKinding x (presupposition d)
-
-  lemma : ∀ {Δ κ τ} → Δ ⊢ all κ τ ∶ ⋆ → κ ∷ Δ ⊢ τ ∶ ⋆
-  lemma (all d) = d
+  -- presupposition : ∀ {Δ Γ t τ} → Δ , Γ ⊢ t ∶ τ → Δ ⊢ τ ∶ ⋆
+  -- presupposition (var x x₁) = x₁
+  -- presupposition (lam x d x₁) = x₁
+  -- presupposition (app d d₁ x) = x
+  -- presupposition (tlam d x) = x
+  -- presupposition (tapp d b x) = x
+  -- presupposition (cast x d) = lemmaCastKinding x (presupposition d)
 
 
 _≟ₜ_ : (τ τ' : Type) → Dec (τ ≡ₜ τ')
