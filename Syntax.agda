@@ -16,6 +16,17 @@ data Type : Set where
   app : Type → Type → Type
   all : Kind → Type → Type
 
+mutual
+  data Typeₙ : Set where
+    neu : Typeᵤ → Typeₙ
+    fun : Typeₙ → Typeₙ → Typeₙ
+    all : Kind → Typeₙ → Typeₙ
+    lam : Kind → Typeₙ → Typeₙ
+
+  data Typeᵤ : Set where
+    var : Nat → Typeᵤ
+    app : Typeᵤ → Typeₙ → Typeᵤ
+
 -- e := x | λ (x : τ) . e | e e | Λ (α : κ) . e | e [τ]
 data Term : Set where
   var  : Nat → Term

@@ -100,6 +100,38 @@ data _,_⊢_∶_ (Δ : KindCtx) (Γ : TypeCtx) : Term → Type → Set where
   -- presupposition (cast x d) = lemmaCastKinding x (presupposition d)
 
 
+TypeCtxₙ : Set
+TypeCtxₙ = Ctx Typeₙ
+
+variable
+  Γₙ : TypeCtxₙ
+  τₙ : Typeₙ
+
+infix 3 _,_⊢_∶ₙ_
+data _,_⊢_∶ₙ_ (Δ : KindCtx) (Γₙ : TypeCtxₙ) : Term → Typeₙ → Set where
+
+inferTypeₙ : ∀ (Δ : KindCtx) (Γₙ : TypeCtxₙ) (e : Term) → Dec (∃[ τ ] Δ , Γₙ ⊢ e ∶ₙ τ)
+inferTypeₙ = {!   !}
+
+embedType : Typeₙ → Type
+embedType = {!   !}
+
+embedTypeCtx : TypeCtxₙ → TypeCtx
+embedTypeCtx = {!   !}
+
+embedTyping : Δ , Γₙ ⊢ e ∶ₙ τₙ → Δ , embedTypeCtx Γₙ ⊢ e ∶ embedType τₙ
+embedTyping = {!   !}
+
+normalizeType : Type → Typeₙ
+normalizeType = {!   !} 
+
+normalizeTypeCtx : TypeCtx → TypeCtxₙ
+normalizeTypeCtx = {!   !} 
+
+normalizeTyping : Δ , Γ ⊢ e ∶ τ → Δ , normalizeTypeCtx Γ ⊢ e ∶ₙ normalizeType τ 
+normalizeTyping = {!   !}
+
+
 _⊢_≟ₜ_ : {κ : Kind} (Δ : KindCtx) (τ τ' : Type) → Dec (Δ ⊢ τ ≡ₜ τ' ∶ κ)
 Δ ⊢ τ₁ ≟ₜ τ₂ = {!   !}
 
@@ -173,3 +205,8 @@ decAll Δ τ = {!   !}
 --   ... | yes ⟨ τ' , prf ⟩ with Δ ⊢ τ' ≟ₜ τ
 --   ...   | no ref   = no λ prf' → ref (uniq-⊢ₜ prf prf')
 --   ...   | yes eq = yes (cast eq prf)
+
+inferType : ∀ (Δ : KindCtx) (Γ : TypeCtx) (e : Term) → Dec (∃[ τ ] Δ , Γ ⊢ e ∶ τ)
+inferType Δ Γ e with inferTypeₙ Δ (normalizeTypeCtx Γ) e
+... | no ref = no λ { ⟨ τ , prf ⟩ → ref ⟨ normalizeType τ , normalizeTyping prf ⟩ }
+... | yes ⟨ τₙ , prfₙ ⟩ = yes ⟨ embedType τₙ , embedTyping prfₙ ⟩
