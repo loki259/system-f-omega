@@ -1,17 +1,11 @@
-module Kinding where
+module Type.Kinding where
 
 open import Relation.Binary.Definitions using (DecidableEquality)
 
 open import Prelude
-open import Syntax
-open import Context
+open import Type
+open import Type.Context
 
-
-KindCtx : Set
-KindCtx = Ctx Kind
-
-variable
-  Δ : KindCtx
 
 infix 3 _⊢_∶_
 data _⊢_∶_ (Δ : KindCtx) : Type → Kind → Set where

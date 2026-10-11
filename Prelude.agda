@@ -15,3 +15,10 @@ open import Relation.Binary.PropositionalEquality public
 open import Relation.Nullary.Negation public
   using (¬_)
 open import Function.Base public
+
+
+Index : Set
+Index = Nat
+
+variable
+  x i : Index

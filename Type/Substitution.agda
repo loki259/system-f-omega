@@ -1,13 +1,13 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 
-module TypeSubstitution where
+module Type.Substitution where
 
 open import Prelude
-open import Syntax
-open import Context
-open import Kinding
-open import TypeNormalization
-open import Data.Sum
+open import Type
+open import Type.Context
+open import Type.Kinding
+open import Type.Normalization
+
 
 --------------------------------------------------------------------------------
 -- Syntax
@@ -54,19 +54,19 @@ _[_] : Type → Type → Type
 -- Syntax (normal)
 --------------------------------------------------------------------------------
 
-mutual
-  renameTypeₙ : IndexRenaming → Typeₙ → Typeₙ
-  renameTypeₙ f (neu τᵤ)    = neu (renameTypeᵤ f τᵤ)
-  renameTypeₙ f (fun τ₁ τ₂) = fun (renameTypeₙ f τ₁) (renameTypeₙ f τ₂)
-  renameTypeₙ f (lam x τ)   = lam x (renameTypeₙ (liftIndexRenaming f) τ)
-  renameTypeₙ f (all x τ)   = all x (renameTypeₙ (liftIndexRenaming f) τ)
+-- mutual
+--   renameTypeₙ : IndexRenaming → Typeₙ → Typeₙ
+--   renameTypeₙ f (neu τᵤ)    = neu (renameTypeᵤ f τᵤ)
+--   renameTypeₙ f (fun τ₁ τ₂) = fun (renameTypeₙ f τ₁) (renameTypeₙ f τ₂)
+--   renameTypeₙ f (lam x τ)   = lam x (renameTypeₙ (liftIndexRenaming f) τ)
+--   renameTypeₙ f (all x τ)   = all x (renameTypeₙ (liftIndexRenaming f) τ)
 
-  renameTypeᵤ : IndexRenaming → Typeᵤ → Typeᵤ
-  renameTypeᵤ f (var x)     = var (f x)
-  renameTypeᵤ f (app τ₁ τ₂) = app (renameTypeᵤ f τ₁) (renameTypeₙ f τ₂)
+--   renameTypeᵤ : IndexRenaming → Typeᵤ → Typeᵤ
+--   renameTypeᵤ f (var x)     = var (f x)
+--   renameTypeᵤ f (app τ₁ τ₂) = app (renameTypeᵤ f τ₁) (renameTypeₙ f τ₂)
 
-weakenTypeₙ : Typeₙ → Typeₙ
-weakenTypeₙ τ = renameTypeₙ suc τ
+-- weakenTypeₙ : Typeₙ → Typeₙ
+-- weakenTypeₙ τ = renameTypeₙ suc τ
 
 
 -- TypeSubstₙ : Set
@@ -139,37 +139,37 @@ weakenTypeₙ τ = renameTypeₙ suc τ
 -- Proofs
 --------------------------------------------------------------------------------
 
-renameTyping : ∀ {Φ Ψ f} → Renaming Φ Ψ f → ∀ {τ κ} → Φ ⊢ τ ∶ κ → Ψ ⊢ renameType f τ ∶ κ
-renameTyping ρ (var prf)       = var (ρ prf)
-renameTyping ρ (fun prf₁ prf₂) = fun (renameTyping ρ prf₁) (renameTyping ρ prf₂)
-renameTyping ρ (all prf)       = all (renameTyping (liftRenaming ρ) prf)
-renameTyping ρ (lam prf)       = lam (renameTyping (liftRenaming ρ) prf)
-renameTyping ρ (app prf₁ prf₂) = app (renameTyping ρ prf₁) (renameTyping ρ prf₂)
+renameKinding : ∀ {Φ Ψ f} → Renaming Φ Ψ f → ∀ {τ κ} → Φ ⊢ τ ∶ κ → Ψ ⊢ renameType f τ ∶ κ
+renameKinding ρ (var prf)       = var (ρ prf)
+renameKinding ρ (fun prf₁ prf₂) = fun (renameKinding ρ prf₁) (renameKinding ρ prf₂)
+renameKinding ρ (all prf)       = all (renameKinding (liftRenaming ρ) prf)
+renameKinding ρ (lam prf)       = lam (renameKinding (liftRenaming ρ) prf)
+renameKinding ρ (app prf₁ prf₂) = app (renameKinding ρ prf₁) (renameKinding ρ prf₂)
 
-weakenTyping : ∀ {Φ κ κ' τ} → Φ ⊢ τ ∶ κ → κ' ∷ Φ ⊢ weakenType τ ∶ κ
-weakenTyping prf = renameTyping there prf
+weakenKinding : ∀ {Φ κ κ' τ} → Φ ⊢ τ ∶ κ → κ' ∷ Φ ⊢ weakenType τ ∶ κ
+weakenKinding prf = renameKinding there prf
 
 
-TypingSubst : KindCtx → KindCtx → TypeSubst → Set
-TypingSubst Φ Ψ f = ∀ {x κ} → Φ ∋ x ↦ κ → Ψ ⊢ f x ∶ κ
+KindingSubst : KindCtx → KindCtx → TypeSubst → Set
+KindingSubst Φ Ψ f = ∀ {x κ} → Φ ∋ x ↦ κ → Ψ ⊢ f x ∶ κ
 
-liftTypingSubst : ∀ {Φ Ψ f} → TypingSubst Φ Ψ f → ∀ {κ} → TypingSubst (κ ∷ Φ) (κ ∷ Ψ) (liftTypeSubst f)
-liftTypingSubst σ here        = var here
-liftTypingSubst σ (there prf) = weakenTyping (σ prf)
+liftKindingSubst : ∀ {Φ Ψ f} → KindingSubst Φ Ψ f → ∀ {κ} → KindingSubst (κ ∷ Φ) (κ ∷ Ψ) (liftTypeSubst f)
+liftKindingSubst σ here        = var here
+liftKindingSubst σ (there prf) = weakenKinding (σ prf)
 
-substTyping : ∀ {Φ Ψ f} → TypingSubst Φ Ψ f → ∀ {κ τ} → Φ ⊢ τ ∶ κ → Ψ ⊢ substType f τ ∶ κ
-substTyping σ (var prf)       = σ prf
-substTyping σ (lam prf)       = lam (substTyping (liftTypingSubst σ) prf)
-substTyping σ (app prf₁ prf₂) = app (substTyping σ prf₁) (substTyping σ prf₂)
-substTyping σ (fun prf₁ prf₂) = fun (substTyping σ prf₁) (substTyping σ prf₂)
-substTyping σ (all prf)       = all (substTyping (liftTypingSubst σ) prf)
+substKinding : ∀ {Φ Ψ f} → KindingSubst Φ Ψ f → ∀ {κ τ} → Φ ⊢ τ ∶ κ → Ψ ⊢ substType f τ ∶ κ
+substKinding σ (var prf)       = σ prf
+substKinding σ (lam prf)       = lam (substKinding (liftKindingSubst σ) prf)
+substKinding σ (app prf₁ prf₂) = app (substKinding σ prf₁) (substKinding σ prf₂)
+substKinding σ (fun prf₁ prf₂) = fun (substKinding σ prf₁) (substKinding σ prf₂)
+substKinding σ (all prf)       = all (substKinding (liftKindingSubst σ) prf)
 
-extendTypingSubst : ∀ {Φ Ψ f} → TypingSubst Φ Ψ f → ∀ {κ τ} → Ψ ⊢ τ ∶ κ → TypingSubst (κ ∷ Φ) Ψ (extendTypeSubst f τ)
-extendTypingSubst σ prf here        = prf
-extendTypingSubst σ _   (there prf) = σ prf
+extendKindingSubst : ∀ {Φ Ψ f} → KindingSubst Φ Ψ f → ∀ {κ τ} → Ψ ⊢ τ ∶ κ → KindingSubst (κ ∷ Φ) Ψ (extendTypeSubst f τ)
+extendKindingSubst σ prf here        = prf
+extendKindingSubst σ _   (there prf) = σ prf
 
-substTypingHere : ∀ {Φ κ κ' τ τₛ} → κ ∷ Φ ⊢ τ ∶ κ' → Φ ⊢ τₛ ∶ κ → Φ ⊢ τ [ τₛ ] ∶ κ'
-substTypingHere prf prfₛ = substTyping (extendTypingSubst var prfₛ) prf
+substKindingHere : ∀ {Φ κ κ' τ τₛ} → κ ∷ Φ ⊢ τ ∶ κ' → Φ ⊢ τₛ ∶ κ → Φ ⊢ τ [ τₛ ] ∶ κ'
+substKindingHere prf prfₛ = substKinding (extendKindingSubst var prfₛ) prf
 
 
 --------------------------------------------------------------------------------

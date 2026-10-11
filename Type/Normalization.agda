@@ -1,11 +1,11 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 
-module TypeNormalization where
+module Type.Normalization where
 
 open import Prelude
-open import Syntax
-open import Context
-open import Kinding
+open import Type
+open import Type.Context
+open import Type.Kinding
 
 
 -- infix 3 _⟶w_
@@ -15,20 +15,12 @@ postulate
   -- _⟶w_ : Type → Type → Set
   _⊢_⟶w_∶_ : (Δ : KindCtx) → Type → Type → Kind → Set
 
+-- _≟ₜ_ : (τ τ' : Typeₙ) → Dec (τ ≡ τ')
+-- τ₁ ≟ₜ τ₂ = {!   !}
+
 --------------------------------------------------------------------------------
 -- Syntax
 --------------------------------------------------------------------------------
-
--- mutual
---   data Typeₙ : Set where
---     neu : Typeᵤ → Typeₙ
---     fun : Typeₙ → Typeₙ → Typeₙ
---     all : Kind → Typeₙ → Typeₙ
---     lam : Kind → Typeₙ → Typeₙ
-
---   data Typeᵤ : Set where
---     var : Index → Typeᵤ
---     app : Typeᵤ → Typeₙ → Typeᵤ
 
 mutual
   data Normal : Type → Set where
