@@ -2,9 +2,24 @@ module Context where
 
 open import Prelude
 
+--------------------------------------------------------------------------------
+-- Syntax
+--------------------------------------------------------------------------------
 
 Ctx : (T : Set) → Set
 Ctx = List
+
+
+IndexRenaming : Set
+IndexRenaming = Nat → Nat
+
+liftIndexRenaming : IndexRenaming → IndexRenaming
+liftIndexRenaming f zero    = zero
+liftIndexRenaming f (suc x) = suc (f x)
+
+--------------------------------------------------------------------------------
+-- Proofs
+--------------------------------------------------------------------------------
 
 data _∋_↦_ {A : Set} : Ctx A → Nat → A → Set where
   here  : ∀ {ctx a} → (a ∷ ctx) ∋ zero ↦ a
@@ -28,9 +43,9 @@ find (x ∷ ctx) (suc x') with find ctx x'
 ... | yes ⟨ a , prf ⟩ = yes ⟨ a , there prf ⟩
 
 
--- Renaming : ∀ {A} → Ctx A → Ctx A → Set
--- Renaming Φ Ψ = ∀ {x a} → Φ ∋ x ↦ a → ∃[ x' ] Ψ ∋ x' ↦ a
+Renaming : ∀ {A} → Ctx A → Ctx A → IndexRenaming → Set
+Renaming {A} Φ Ψ f = ∀ {x a} → Φ ∋ x ↦ a → Ψ ∋ f x ↦ a
 
--- lift : ∀ {A Φ Ψ} → Renaming {A} Φ Ψ → ∀ {a} → Renaming (a ∷ Φ) (a ∷ Ψ)
--- lift ρ here        = ⟨ zero , here ⟩         -- Leave newly bound variable untouched
--- lift ρ (there prf) = Σ-map suc there (ρ prf) -- Apply renaming to other variables and add 1
+liftRenaming : ∀ {A Φ Ψ f} → Renaming {A} Φ Ψ f → ∀ {a'} → Renaming {A} (a' ∷ Φ) (a' ∷ Ψ) (liftIndexRenaming f)
+liftRenaming ρ here        = here
+liftRenaming ρ (there prf) = there (ρ prf)

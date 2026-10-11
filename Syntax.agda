@@ -3,6 +3,9 @@ module Syntax where
 open import Prelude
 
 
+Index : Set
+Index = Nat
+
 -- κ := * | κ → κ
 data Kind : Set where
   ⋆    : Kind
@@ -10,32 +13,22 @@ data Kind : Set where
 
 -- τ := α | τ → τ | λ (α : κ) . τ | τ τ | ∀ (α : κ) . τ
 data Type : Set where
-  var : Nat → Type
+  var : Index → Type
   fun : Type → Type → Type
   lam : Kind → Type → Type
   app : Type → Type → Type
   all : Kind → Type → Type
 
-mutual
-  data Typeₙ : Set where
-    neu : Typeᵤ → Typeₙ
-    fun : Typeₙ → Typeₙ → Typeₙ
-    all : Kind → Typeₙ → Typeₙ
-    lam : Kind → Typeₙ → Typeₙ
-
-  data Typeᵤ : Set where
-    var : Nat → Typeᵤ
-    app : Typeᵤ → Typeₙ → Typeᵤ
-
 -- e := x | λ (x : τ) . e | e e | Λ (α : κ) . e | e [τ]
 data Term : Set where
-  var  : Nat → Term
+  var  : Index → Term
   lam  : Type → Term → Term
   app  : Term → Term → Term
   tlam : Kind → Term → Term
   tapp : Term → Type → Term
 
 variable
-  κ : Kind
-  τ : Type
-  e t : Term
+  κ κ' κ₁ κ₁' κ₂ κ₂' : Kind
+  τ τ' τ₁ τ₁' τ₂ τ₂' : Type
+  e t u : Term
+  x i : Index
