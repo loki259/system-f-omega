@@ -1,7 +1,5 @@
 module Type.Kinding where
 
-open import Relation.Binary.Definitions using (DecidableEquality)
-
 open import Prelude
 open import Type
 open import Type.Context

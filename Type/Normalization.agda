@@ -1,5 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
-
 module Type.Normalization where
 
 open import Prelude
@@ -63,14 +61,6 @@ mutual
   renameKindingᵤ ρ (var prf)       = var (ρ prf)
   renameKindingᵤ ρ (app prf₁ prf₂) = app (renameKindingᵤ ρ prf₁) (renameKindingₙ ρ prf₂)
 
-lemma-beta-renaming : Δ ⊢ app (lam κ (renameType (liftIndexRenaming r) τ)) (renameType r τₛ) ≡ₜ renameType (liftIndexRenaming r) τ [ renameType r τₛ ] ∶ κ'
-                    → Δ ⊢ renameType r (app (lam κ τ) τₛ) ≡ₜ renameType r (τ [ τₛ ]) ∶ κ'
-lemma-beta-renaming = {!   !}
-
-lemma-eta-renaming : Δ ⊢ renameType r τ ≡ₜ lam κ (app (weakenType (renameType r τ)) (var zero)) ∶ tfun κ κ'
-                   → Δ ⊢ renameType r τ ≡ₜ renameType r (lam κ (app (weakenType τ) (var zero))) ∶ tfun κ κ'
-lemma-eta-renaming = {!   !}
-
 
 renameType-eq : Renaming Δ Δ' r → Δ ⊢ τ₁ ≡ₜ τ₂ ∶ κ → Δ' ⊢ renameType r τ₁ ≡ₜ renameType r τ₂ ∶ κ
 renameType-eq ρ (trefl prf)      = trefl (renameKinding ρ prf)
@@ -80,8 +70,12 @@ renameType-eq ρ (fun eq₁ eq₂)    = fun (renameType-eq ρ eq₁) (renameType
 renameType-eq ρ (all eq)         = all (renameType-eq (liftRenaming ρ) eq)
 renameType-eq ρ (lam eq)         = lam (renameType-eq (liftRenaming ρ) eq)
 renameType-eq ρ (app eq₁ eq₂)    = app (renameType-eq ρ eq₁) (renameType-eq ρ eq₂)
-renameType-eq ρ (beta prf)       = lemma-beta-renaming (beta (renameKinding ρ prf))
-renameType-eq ρ (eta prf)        = lemma-eta-renaming (eta (renameKinding ρ prf))
+renameType-eq {r = r} ρ (beta {τ = τ} {τₛ = τₛ} prf)
+  rewrite renameType-substType-extendTypeSubst-comp {r = r} {τₛ = τₛ} {τ = τ}
+  = beta (renameKinding ρ prf)
+renameType-eq {r = r} ρ (eta {τ = τ} prf)
+  rewrite sym (weakenType-renameType-commut {r = r} {τ = τ})
+  = eta (renameKinding ρ prf)
 
 
 renameKinding∃ₙ : ∀ {Φ Ψ f} → Renaming Φ Ψ f → ∀ {τ κ} → Φ ∃⊢ₙ τ ∶ κ → Ψ ∃⊢ₙ renameType f τ ∶ κ

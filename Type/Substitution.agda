@@ -1,5 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
-
 module Type.Substitution where
 
 open import Prelude
@@ -42,13 +40,6 @@ lifted-renameType-∘ {n = n} {r' = r'} {r = r} {τ = all κ τ}
 renameType-∘ : renameType r' (renameType r τ) ≡ renameType (r' ∘ r) τ
 renameType-∘ = lifted-renameType-∘ {n = zero}
 
--- renameType-∘ : renameType r' (renameType r τ) ≡ renameType (r' ∘ r) τ
--- renameType-∘ {τ = var x}     = refl
--- renameType-∘ {τ = fun τ₁ τ₂} = cong₂ fun renameType-∘ renameType-∘
--- -- renameType-∘ {τ = lam κ τ}   = cong (lam κ) (trans renameType-∘ (cong (λ x → renameType x τ) (function-extensionality liftIndexRenaming-∘)))
--- renameType-∘ {τ = lam κ τ}   = cong (lam κ) {!   !} -- (trans renameType-∘ (cong (λ x → renameType x τ) (function-extensionality liftIndexRenaming-∘)))
--- renameType-∘ {τ = app τ₁ τ₂} = cong₂ app renameType-∘ renameType-∘
--- renameType-∘ {τ = all κ τ}   = cong (all κ) (trans renameType-∘ (cong (λ x → renameType x τ) (function-extensionality liftIndexRenaming-∘)))
 
 weakenType : Type → Type
 weakenType = renameType suc
@@ -214,39 +205,6 @@ substKindingHere prf prfₛ = substKinding (extendKindingSubst var prfₛ) prf
 
 
 --------------------------------------------------------------------------------
--- Proofs (normal)
---------------------------------------------------------------------------------
-
--- infix 1 _⟶w_
-
--- data _⟶w_ : (τ τ' : Type) → Set where
---   beta : ∀ {τ τₛ κ} → app (lam κ τ) τₛ ⟶w τ [ τₛ ]
---   appl : ∀ {τ τ' τₛ} → τ ⟶w τ' → app τ τₛ ⟶w app τ' τₛ
-
--- mutual
---   data WNe : Type → Set where
---     var : ∀ {x : Nat} → WNe (var x)
---     app : ∀ {τ₁ τ₂ : Type} → (wne : WNe τ₁) (wn : WN τ₂) → WNe (app τ₁ τ₂)
-
---   data WN : Type → Set where
---     neu : ∀ {τ} → WNe τ → WN τ
---     lam : ∀ {τ κ} → WN τ → WN (lam κ τ)
---     all : ∀ {τ κ} → WN τ → WN (all κ τ)
---     fun : ∀ {τ₁ τ₂} → WN τ₁ → WN τ₂ → WN (fun τ₁ τ₂)
---     exp : ∀ {τ τ'} → τ ⟶w τ' → WN τ' → WN τ
-
--- -- Red : (Γ : Context) (a : Ty) (t : Term Γ a) → Set
--- -- Red Γ (` α)   t = WN t
--- -- Red Γ (a ⇒ b) t = ∀{Δ} (ρ : Wk Δ Γ) {u : Term Δ a} (⟦u⟧ : Red Δ a u) → Red Δ b (app (wk ρ t) u)
--- _⊩_∶_ : KindCtx → Type → Kind → Set
--- Δ ⊩ τ ∶ ⋆         = WN τ
--- Δ ⊩ τ ∶ tfun κ κ' = ∀ {Δ' f} {ρ : Renaming Δ Δ' f} {τ' : Type} → Δ' ⊩ τ' ∶ κ → Δ' ⊩ app (renameType f τ) τ' ∶ κ'
-
--- normalization : Δ ⊢ τ ∶ κ → WN τ
--- normalization prf = {! subst WN (sub-id) (Red→WN (fund t ⟦idS⟧)) !}
-
-
---------------------------------------------------------------------------------
 
 -- FIXME: move to Context?
 idRenaming : Renaming Δ Δ id
@@ -317,32 +275,6 @@ lifted-lemma-substTypeAtZero-weakened {n = n} {τₛ = τₛ} {τ = all κ τ}
 lemma-substTypeAtZero-weakened : substTypeAtZero (weakenType τ) τₛ ≡ τ
 lemma-substTypeAtZero-weakened = lifted-lemma-substTypeAtZero-weakened {n = 0}
 
--- lemma-rename-weakened : renameType (liftIndexRenaming r) (weakenType τ) ≡ weakenType (renameType r τ)
--- lemma-rename-weakened {r = r} {τ = τ}
---   rewrite renameType-∘ {r' = liftIndexRenaming r} {r = suc} {τ = τ}
---   rewrite renameType-∘ {r' = suc} {r = r} {τ = τ} = refl
-
--- lemma-strengthen-subst : renameType r (s x) ≡ substType (extendTypeSubst var τₛ) (renameType (liftIndexRenaming r) (weakenType (s x)))
--- lemma-strengthen-subst {x = zero} = {!   !}
--- lemma-strengthen-subst {x = suc x} = {!   !}
-
--- lifted-lemma-mon : substType (liftTypeSubstN n (extendTypeSubst (λ x → renameType r (s x)) τₛ)) τ ≡ substType (liftTypeSubstN n (extendTypeSubst var τₛ)) (renameType (liftIndexRenamingN n (liftIndexRenaming r)) (substType (liftTypeSubstN n (liftTypeSubst s)) τ))
--- lifted-lemma-mon {n = 0} {τ = var zero}     = {!   !}
--- lifted-lemma-mon {n = suc n} {τ = var zero} = refl
--- lifted-lemma-mon {n = 0} {τ = var (suc x)}  = {!   !}
--- lifted-lemma-mon {n = suc n} {τ = var (suc x)}  = {!   !}
--- lifted-lemma-mon {n = n} {τ = fun τ₁ τ₂}    = cong₂ fun (lifted-lemma-mon {n = n}) (lifted-lemma-mon {n = n})
--- lifted-lemma-mon {n = n} {τ = lam κ τ}      = cong (lam κ) (lifted-lemma-mon {n = suc n})
--- lifted-lemma-mon {n = n} {τ = app τ₁ τ₂}    = cong₂ app (lifted-lemma-mon {n = n}) (lifted-lemma-mon {n = n})
--- lifted-lemma-mon {n = n} {τ = all κ τ}      = cong (all κ) (lifted-lemma-mon {n = suc n})
-
--- lemma-mon : substType (extendTypeSubst (λ x → renameType r (s x)) τₛ) τ ≡ substType (extendTypeSubst var τₛ) (renameType (liftIndexRenaming r) (substType (liftTypeSubst s) τ))
--- lemma-mon {r = r} {s = s} {τₛ = τₛ} {τ = τ} = lifted-lemma-mon {n = 0} {r = r} {s = s} {τₛ = τₛ} {τ = τ}
-
-
--- substType (extendTypeSubst (λ x → renameType r (s x)) τₛ) τ
--- ≡ substType (extendTypeSubst var τₛ) (renameType (liftIndexRenaming r) (substType (liftTypeSubst s) τ))
-
 
 
 lifted-suc-IndexRenaming-commut : liftIndexRenamingN n suc (liftIndexRenamingN n r x) ≡ liftIndexRenamingN (suc n) r (liftIndexRenamingN n suc x)
@@ -395,6 +327,8 @@ lifted-renameType-substType-comp {n = n} {r = r} {s = s} {τ = all κ τ}
   rewrite lemma-contract-liftTypeSubst {n = n} {s = (λ x → renameType r (s x))}
   = cong (all κ) (lifted-renameType-substType-comp {n = suc n} {τ = τ})
 
+renameType-substType-comp : renameType r (substType s τ) ≡ substType (λ x → renameType r (s x)) τ
+renameType-substType-comp {τ = τ} = lifted-renameType-substType-comp {n = 0} {τ = τ}
 
 lifted-suc-TypeSubst-commut : renameType (liftIndexRenamingN n suc) (liftTypeSubstN n s x) ≡ liftTypeSubstN (suc n) s (liftIndexRenamingN n suc x)
 lifted-suc-TypeSubst-commut {n = 0}                 = refl
@@ -454,3 +388,37 @@ lifted-substTypeAtZero-comp {n = n} {τₛ = τₛ} {s = s} {τ = all κ τ}
 
 substTypeAtZero-comp : substType (liftTypeSubst s) τ [ τₛ ] ≡ substType (extendTypeSubst s τₛ) τ
 substTypeAtZero-comp {s = s} {τ = τ} {τₛ = τₛ} = lifted-substTypeAtZero-comp {n = 0} {τₛ = τₛ} {s = s} {τ = τ}
+
+
+lifted-renameType-extendTypeSubst-comp : renameType (liftIndexRenamingN n r) (liftTypeSubstN n (extendTypeSubst var τₛ) x) ≡ liftTypeSubstN n (extendTypeSubst var (renameType r τₛ)) (liftIndexRenamingN (suc n) r x)
+lifted-renameType-extendTypeSubst-comp {n = 0}     {x = 0}    = refl
+lifted-renameType-extendTypeSubst-comp {n = suc n} {x = 0}    = refl
+lifted-renameType-extendTypeSubst-comp {n = zero} {x = suc x} = refl
+lifted-renameType-extendTypeSubst-comp {n = suc n} {r = r} {τₛ = τₛ} {suc x}
+  rewrite sym (lemma-contract-liftIndexRenaming {n = n} {r = r})
+  rewrite sym (lifted-weakenType-renameType-commut {n = 0} {r = liftIndexRenamingN n r} {τ = liftTypeSubstN n (extendTypeSubst var τₛ) x })
+  rewrite lemma-contract-liftIndexRenaming {n = n} {r = r}
+  = cong weakenType (lifted-renameType-extendTypeSubst-comp {n = n})
+
+renameType-extendTypeSubst-comp : renameType r (extendTypeSubst var τₛ x) ≡ extendTypeSubst var (renameType r τₛ) (liftIndexRenaming r x)
+renameType-extendTypeSubst-comp {x = x} = lifted-renameType-extendTypeSubst-comp {n = 0} {x = x}
+
+lifted-renameType-substType-extendTypeSubst-comp : renameType (liftIndexRenamingN n r) (substType (liftTypeSubstN n (extendTypeSubst var τₛ)) τ) ≡ substType (liftTypeSubstN n (extendTypeSubst var (renameType r τₛ))) (renameType (liftIndexRenamingN (suc n) r) τ)
+lifted-renameType-substType-extendTypeSubst-comp {n = n} {τ = var x}     = lifted-renameType-extendTypeSubst-comp {n = n} {x = x}
+lifted-renameType-substType-extendTypeSubst-comp {n = n} {τ = fun τ₁ τ₂} = cong₂ fun (lifted-renameType-substType-extendTypeSubst-comp {n = n} {τ = τ₁}) (lifted-renameType-substType-extendTypeSubst-comp {n = n} {τ = τ₂})
+lifted-renameType-substType-extendTypeSubst-comp {n = n} {τ = app τ₁ τ₂} = cong₂ app (lifted-renameType-substType-extendTypeSubst-comp {n = n} {τ = τ₁}) (lifted-renameType-substType-extendTypeSubst-comp {n = n} {τ = τ₂})
+lifted-renameType-substType-extendTypeSubst-comp {n = n} {r = r} {τₛ = τₛ} {τ = lam κ τ}
+  rewrite lemma-contract-liftIndexRenaming {n = n} {r = r}
+  rewrite lemma-contract-liftIndexRenaming {n = suc n} {r = r}
+  rewrite lemma-contract-liftTypeSubst {n = n} {s = extendTypeSubst var τₛ}
+  rewrite lemma-contract-liftTypeSubst {n = n} {s = extendTypeSubst var (renameType r τₛ)}
+  = cong (lam κ) (lifted-renameType-substType-extendTypeSubst-comp {n = suc n} {τ = τ})
+lifted-renameType-substType-extendTypeSubst-comp {n = n} {r = r} {τₛ = τₛ} {τ = all κ τ}
+  rewrite lemma-contract-liftIndexRenaming {n = n} {r = r}
+  rewrite lemma-contract-liftIndexRenaming {n = suc n} {r = r}
+  rewrite lemma-contract-liftTypeSubst {n = n} {s = extendTypeSubst var τₛ}
+  rewrite lemma-contract-liftTypeSubst {n = n} {s = extendTypeSubst var (renameType r τₛ)}
+  = cong (all κ) (lifted-renameType-substType-extendTypeSubst-comp {n = suc n} {τ = τ})
+
+renameType-substType-extendTypeSubst-comp : renameType r (substType (extendTypeSubst var τₛ) τ) ≡ substType (extendTypeSubst var (renameType r τₛ)) (renameType (liftIndexRenaming r) τ)
+renameType-substType-extendTypeSubst-comp {τ = τ} = lifted-renameType-substType-extendTypeSubst-comp {n = 0} {τ = τ}
