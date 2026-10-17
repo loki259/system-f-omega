@@ -10,10 +10,10 @@ open import Type.Context
 infix 3 _⊢_∶_
 data _⊢_∶_ (Δ : KindCtx) : Type → Kind → Set where
   var : ∀ {x κ} → Δ ∋ x ↦ κ → Δ ⊢ var x ∶ κ
-  fun : ∀ {τ τ'} → Δ ⊢ τ ∶ ⋆ → Δ ⊢ τ' ∶ ⋆ → Δ ⊢ fun τ τ' ∶ ⋆
+  fun : ∀ {τ₁ τ₂} → Δ ⊢ τ₁ ∶ ⋆ → Δ ⊢ τ₂ ∶ ⋆ → Δ ⊢ fun τ₁ τ₂ ∶ ⋆
   all : ∀ {κ τ} → κ ∷ Δ ⊢ τ ∶ ⋆ → Δ ⊢ all κ τ ∶ ⋆
   lam : ∀ {κ κ' τ} → κ ∷ Δ ⊢ τ ∶ κ' → Δ ⊢ lam κ τ ∶ tfun κ κ'
-  app : ∀ {τ τ' κ κ'} → Δ ⊢ τ ∶ tfun κ κ' → Δ ⊢ τ' ∶ κ → Δ ⊢ app τ τ' ∶ κ'
+  app : ∀ {τ₁ τ₂ κ κ'} → Δ ⊢ τ₁ ∶ tfun κ κ' → Δ ⊢ τ₂ ∶ κ → Δ ⊢ app τ₁ τ₂ ∶ κ'
 
 
 _≟ₖ_ : DecidableEquality Kind

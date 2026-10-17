@@ -6,112 +6,234 @@ open import Prelude
 open import Type
 open import Type.Context
 open import Type.Kinding
+open import Type.Substitution
+open import Type.Equality
 
-
--- infix 3 _⟶w_
-infix 3 _⊢_⟶w_∶_
-
-postulate
-  -- _⟶w_ : Type → Type → Set
-  _⊢_⟶w_∶_ : (Δ : KindCtx) → Type → Type → Kind → Set
-
--- _≟ₜ_ : (τ τ' : Typeₙ) → Dec (τ ≡ τ')
--- τ₁ ≟ₜ τ₂ = {!   !}
-
---------------------------------------------------------------------------------
--- Syntax
---------------------------------------------------------------------------------
-
-mutual
-  data Normal : Type → Set where
-    neu : Neutral τ → Normal τ
-    fun : Normal τ₁ → Normal τ₂ → Normal (fun τ₁ τ₂)
-    all : (κ : Kind) → Normal τ  → Normal (all κ τ)
-    lam : (κ : Kind) → Normal τ  → Normal (lam κ τ)
-
-  data Neutral : Type → Set where
-    var : (x : Index) → Neutral (var x)
-    app : Neutral τ₁ → Normal τ₂ → Neutral (app τ₁ τ₂)
-
-variable
-  τₙ τₙ' τₙ₁ τₙ₁' τₙ₂ τₙ₂' : ∀ {τ} → Normal τ
-  τᵤ τᵤ' τᵤ₁ τᵤ₁' τᵤ₂ τᵤ₂' : ∀ {τ} → Neutral τ
-
--- mutual
---   data Normalizing : Type → Set where
---     neu : Neutralizing τ → Normalizing τ
---     fun : Normalizing τ₁ → Normalizing τ₂ → Normalizing (fun τ₁ τ₂)
---     all : (κ : Kind) → Normalizing τ  → Normalizing (all κ τ)
---     lam : (κ : Kind) → Normalizing τ → Normalizing (lam κ τ)
---     exp : τ ⟶w τ' → Normalizing τ' → Normalizing τ
-  
---   data Neutralizing : Type → Set where
---     var : (x : Index) → Neutralizing (var x)
---     app : Neutralizing τ₁ → Normalizing τ₂ → Neutralizing (app τ₁ τ₂)
-
-
---------------------------------------------------------------------------------
--- Proofs
---------------------------------------------------------------------------------
-    
--- mutual
---   infix 3 _⊢ₙ_∶_
---   data _⊢ₙ_∶_ (Δ : KindCtx) : Typeₙ → Kind → Set where
---     neu : ∀ {τ} → Δ ⊢ᵤ τ ∶ ⋆ → Δ ⊢ₙ neu τ ∶ ⋆
---     fun : ∀ {τ τ'} → Δ ⊢ₙ τ ∶ ⋆ → Δ ⊢ₙ τ' ∶ ⋆ → Δ ⊢ₙ fun τ τ' ∶ ⋆
---     all : ∀ {κ τ} → κ ∷ Δ ⊢ₙ τ ∶ ⋆ → Δ ⊢ₙ all κ τ ∶ ⋆
---     lam : ∀ {κ κ' τ} → κ ∷ Δ ⊢ₙ τ ∶ κ' → Δ ⊢ₙ lam κ τ ∶ tfun κ κ'
-
---   infix 3 _⊢ᵤ_∶_
---   data _⊢ᵤ_∶_ (Δ : KindCtx) : Typeᵤ → Kind → Set where
---     var : ∀ {x} → Δ ∋ x ↦ κ → Δ ⊢ᵤ var x ∶ κ
---     app : ∀ {τ τ' κ κ'} → Δ ⊢ᵤ τ ∶ tfun κ κ' → Δ ⊢ₙ τ' ∶ κ → Δ ⊢ᵤ app τ τ' ∶ κ'
 
 mutual
   infix 3 _⊢ₙ_∶_
-  data _⊢ₙ_∶_ (Δ : KindCtx) : ∀ {τ} → Normal τ → Kind → Set where
-    neu : Δ ⊢ᵤ (τᵤ {τ}) ∶ ⋆ → Δ ⊢ₙ neu (τᵤ {τ}) ∶ ⋆
-    fun : Δ ⊢ₙ (τₙ {τ}) ∶ ⋆ → Δ ⊢ₙ (τₙ' {τ}) ∶ ⋆ → Δ ⊢ₙ fun (τₙ {τ}) (τₙ' {τ}) ∶ ⋆
-    all : κ ∷ Δ ⊢ₙ (τₙ {τ}) ∶ ⋆ → Δ ⊢ₙ all κ (τₙ {τ}) ∶ ⋆
-    lam : κ ∷ Δ ⊢ₙ (τₙ {τ}) ∶ κ' → Δ ⊢ₙ lam κ (τₙ {τ}) ∶ tfun κ κ'
+  data _⊢ₙ_∶_ (Δ : KindCtx) : Type → Kind → Set where
+    neu : Δ ⊢ᵤ τ ∶ κ → Δ ⊢ₙ τ ∶ κ
+    fun : Δ ⊢ₙ τ₁ ∶ ⋆ → Δ ⊢ₙ τ₂ ∶ ⋆ → Δ ⊢ₙ fun τ₁ τ₂ ∶ ⋆
+    all : κ ∷ Δ ⊢ₙ τ ∶ ⋆ → Δ ⊢ₙ all κ τ ∶ ⋆
+    lam : κ ∷ Δ ⊢ₙ τ ∶ κ' → Δ ⊢ₙ lam κ τ ∶ tfun κ κ'
 
   infix 3 _⊢ᵤ_∶_
-  data _⊢ᵤ_∶_ (Δ : KindCtx) : ∀ {τ} → Neutral τ → Kind → Set where
+  data _⊢ᵤ_∶_ (Δ : KindCtx) : Type → Kind → Set where
     var : Δ ∋ x ↦ κ → Δ ⊢ᵤ var x ∶ κ
-    app : Δ ⊢ᵤ (τᵤ {τ}) ∶ tfun κ κ' → Δ ⊢ₙ (τₙ {τ}) ∶ κ → Δ ⊢ᵤ app (τᵤ {τ}) (τₙ {τ}) ∶ κ'
+    app : Δ ⊢ᵤ τ₁ ∶ tfun κ κ' → Δ ⊢ₙ τ₂ ∶ κ → Δ ⊢ᵤ app τ₁ τ₂ ∶ κ'
+
+variable
+  τₙ τᵤ : Type
+
+infix 3 _∃⊢ₙ_∶_
+_∃⊢ₙ_∶_ : KindCtx → Type → Kind → Set
+Δ ∃⊢ₙ τ ∶ κ = ∃[ τ' ] (Δ ⊢ₙ τ' ∶ κ) × (Δ ⊢ τ' ≡ₜ τ ∶ κ)
+
+infix 3 _∃⊢ᵤ_∶_
+_∃⊢ᵤ_∶_ : KindCtx → Type → Kind → Set
+Δ ∃⊢ᵤ τ ∶ κ = ∃[ τ' ] (Δ ⊢ᵤ τ' ∶ κ) × (Δ ⊢ τ' ≡ₜ τ ∶ κ)
+
+-- infix 3 _∃⊢ₙ_∶_
+-- record _∃⊢ₙ_∶_ (Δ : KindCtx) (τ : Type) (κ : Kind) : Set where
+--   field
+--     {τₙ}          : Type
+--     normalization : Δ ⊢ₙ τₙ ∶ κ
+--     soundness     : Δ ⊢ τₙ ≡ₜ τ ∶ κ
+
+-- infix 3 _∃⊢ᵤ_∶_
+-- record _∃⊢ᵤ_∶_ (Δ : KindCtx) (τ : Type) (κ : Kind) : Set where
+--   field
+--     {τᵤ}           : Type
+--     neutralization : Δ ⊢ᵤ τᵤ ∶ κ
+--     soundness      : Δ ⊢ τᵤ ≡ₜ τ ∶ κ
+
+infix 3 _⊢ₙ_≡ₜ_∶_
+data _⊢ₙ_≡ₜ_∶_ (Δ : KindCtx) : Type → Type → Kind → Set where
+  refl : Δ ⊢ₙ τ ∶ κ → Δ ⊢ₙ τ ≡ₜ τ ∶ κ
 
 mutual
-  infix 3 _⊩ₙ_∶_
-  data _⊩ₙ_∶_ (Δ : KindCtx) : Type → Kind → Set where
-    neu : Δ ⊩ᵤ τ ∶ ⋆ → Δ ⊩ₙ τ ∶ ⋆
-    fun : Δ ⊩ₙ τ ∶ ⋆ → Δ ⊩ₙ τ' ∶ ⋆ → Δ ⊩ₙ fun τ τ' ∶ ⋆
-    all : κ ∷ Δ ⊩ₙ τ ∶ ⋆ → Δ ⊩ₙ all κ τ ∶ ⋆
-    lam : κ ∷ Δ ⊩ₙ τ ∶ κ' → Δ ⊩ₙ lam κ τ ∶ tfun κ κ'
-    exp : Δ ⊢ τ ⟶w τ' ∶ κ → Δ ⊩ₙ τ' ∶ κ → Δ ⊩ₙ τ ∶ κ
+  renameKindingₙ : ∀ {Φ Ψ f} → Renaming Φ Ψ f → ∀ {τ κ} → Φ ⊢ₙ τ ∶ κ → Ψ ⊢ₙ renameType f τ ∶ κ
+  renameKindingₙ ρ (neu prf)       = neu (renameKindingᵤ ρ prf)
+  renameKindingₙ ρ (fun prf₁ prf₂) = fun (renameKindingₙ ρ prf₁) (renameKindingₙ ρ prf₂)
+  renameKindingₙ ρ (all prf)       = all (renameKindingₙ (liftRenaming ρ) prf)
+  renameKindingₙ ρ (lam prf)       = lam (renameKindingₙ (liftRenaming ρ) prf)
 
-  infix 3 _⊩ᵤ_∶_
-  data _⊩ᵤ_∶_ (Δ : KindCtx) : Type → Kind → Set where
-    var : Δ ∋ x ↦ κ → Δ ⊩ᵤ var x ∶ κ
-    app : Δ ⊩ᵤ τ ∶ tfun κ κ' → Δ ⊩ₙ τ' ∶ κ → Δ ⊩ᵤ app τ τ' ∶ κ'
+  renameKindingᵤ : ∀ {Φ Ψ f} → Renaming Φ Ψ f → ∀ {τ κ} → Φ ⊢ᵤ τ ∶ κ → Ψ ⊢ᵤ renameType f τ ∶ κ
+  renameKindingᵤ ρ (var prf)       = var (ρ prf)
+  renameKindingᵤ ρ (app prf₁ prf₂) = app (renameKindingᵤ ρ prf₁) (renameKindingₙ ρ prf₂)
 
--- Red : (Γ : Context) (a : Ty) (t : Term Γ a) → Set
--- Red Γ (` α)   t = WN t
--- Red Γ (a ⇒ b) t = ∀{Δ} (ρ : Wk Δ Γ) {u : Term Δ a} (⟦u⟧ : Red Δ a u) → Red Δ b (app (wk ρ t) u)
--- _⊩_∶_ : KindCtx → Type → Kind → Set
--- Δ ⊩ τ ∶ ⋆         = Δ ⊩ₙ τ ∶ ⋆
--- Δ ⊩ τ ∶ tfun κ κ' = ∀ {Δ' f τ'} → Renaming Δ Δ' f → Δ' ⊩ τ' ∶ κ → Δ' ⊩ app (renameType f τ) τ' ∶ κ'
+lemma-beta-renaming : Δ ⊢ app (lam κ (renameType (liftIndexRenaming r) τ)) (renameType r τₛ) ≡ₜ renameType (liftIndexRenaming r) τ [ renameType r τₛ ] ∶ κ'
+                    → Δ ⊢ renameType r (app (lam κ τ) τₛ) ≡ₜ renameType r (τ [ τₛ ]) ∶ κ'
+lemma-beta-renaming = {!   !}
 
+lemma-eta-renaming : Δ ⊢ renameType r τ ≡ₜ lam κ (app (weakenType (renameType r τ)) (var zero)) ∶ tfun κ κ'
+                   → Δ ⊢ renameType r τ ≡ₜ renameType r (lam κ (app (weakenType τ) (var zero))) ∶ tfun κ κ'
+lemma-eta-renaming = {!   !}
+
+
+renameType-eq : Renaming Δ Δ' r → Δ ⊢ τ₁ ≡ₜ τ₂ ∶ κ → Δ' ⊢ renameType r τ₁ ≡ₜ renameType r τ₂ ∶ κ
+renameType-eq ρ (trefl prf)      = trefl (renameKinding ρ prf)
+renameType-eq ρ (tsym eq)        = tsym (renameType-eq ρ eq)
+renameType-eq ρ (ttrans eq₁ eq₂) = ttrans (renameType-eq ρ eq₁) (renameType-eq ρ eq₂)
+renameType-eq ρ (fun eq₁ eq₂)    = fun (renameType-eq ρ eq₁) (renameType-eq ρ eq₂)
+renameType-eq ρ (all eq)         = all (renameType-eq (liftRenaming ρ) eq)
+renameType-eq ρ (lam eq)         = lam (renameType-eq (liftRenaming ρ) eq)
+renameType-eq ρ (app eq₁ eq₂)    = app (renameType-eq ρ eq₁) (renameType-eq ρ eq₂)
+renameType-eq ρ (beta prf)       = lemma-beta-renaming (beta (renameKinding ρ prf))
+renameType-eq ρ (eta prf)        = lemma-eta-renaming (eta (renameKinding ρ prf))
+
+
+renameKinding∃ₙ : ∀ {Φ Ψ f} → Renaming Φ Ψ f → ∀ {τ κ} → Φ ∃⊢ₙ τ ∶ κ → Ψ ∃⊢ₙ renameType f τ ∶ κ
+renameKinding∃ₙ {f = f} ρ ⟨ τ' , ⟨ prf , eq ⟩ ⟩ = ⟨ renameType f τ' , ⟨ renameKindingₙ ρ prf , renameType-eq ρ eq ⟩ ⟩
+
+renameKinding∃ᵤ : ∀ {Φ Ψ f} → Renaming Φ Ψ f → ∀ {τ κ} → Φ ∃⊢ᵤ τ ∶ κ → Ψ ∃⊢ᵤ renameType f τ ∶ κ
+renameKinding∃ᵤ {f = f} ρ ⟨ τ' , ⟨ prf , eq ⟩ ⟩ = ⟨ renameType f τ' , ⟨ renameKindingᵤ ρ prf , renameType-eq ρ eq ⟩ ⟩
+
+weakenKindingₙ : Δ ⊢ₙ τ ∶ κ → κ' ∷ Δ ⊢ₙ weakenType τ ∶ κ
+weakenKindingₙ = renameKindingₙ there
+
+weakenKindingᵤ : Δ ⊢ᵤ τ ∶ κ → κ' ∷ Δ ⊢ᵤ weakenType τ ∶ κ
+weakenKindingᵤ = renameKindingᵤ there
+
+
+-- Forcing
+infix 3 _⊩_∶_
+_⊩_∶_ : KindCtx → Type → Kind → Set
+Δ ⊩ τ ∶ ⋆         = Δ ∃⊢ₙ τ ∶ ⋆
+Δ ⊩ τ ∶ tfun κ κ' = ∀ {Δ' r τ'} → Renaming Δ Δ' r → Δ' ⊩ τ' ∶ κ → Δ' ⊩ app (renameType r τ) τ' ∶ κ'
+
+
+renameForcing : Renaming Δ Δ' r → Δ ⊩ τ ∶ κ → Δ' ⊩ renameType r τ ∶ κ
+renameForcing {κ = ⋆} ρ prf = renameKinding∃ₙ ρ prf
+renameForcing {r = r} {τ = τ} {κ = tfun κ κ₁} ρ f {r = r'} ρ' prf
+  with prf' ← f (Renaming-∘ ρ' ρ) prf rewrite lifted-renameType-∘ {n = 0} {r' = r'} {r = r} {τ = τ} = prf'
+
+ForcingSubst : KindCtx → KindCtx → TypeSubst → Set
+ForcingSubst Δ Δ' f = ∀ {x κ} → Δ ∋ x ↦ κ → Δ' ⊩ f x ∶ κ
+
+strengthen : RetractableRenaming Δ Δ' r → Δ' ⊢ renameType r τ ∶ κ → Δ ⊢ τ ∶ κ
+strengthen {τ = var x}     ρ (var prf)       = var (ρ .retract prf)
+strengthen {τ = fun τ₁ τ₂} ρ (fun prf₁ prf₂) = fun (strengthen ρ prf₁) (strengthen ρ prf₂)
+strengthen {τ = lam κ τ}   ρ (lam prf)       = lam (strengthen (lift ρ) prf)
+strengthen {τ = app τ₁ τ₂} ρ (app prf₁ prf₂) = app (strengthen ρ prf₁) (strengthen ρ prf₂)
+strengthen {τ = all κ τ}   ρ (all prf)       = all (strengthen (lift ρ) prf)
 
 -- mutual
-  -- renameTypeₙ : ∀ {Φ Ψ} → Renaming Φ Ψ → ∀ {τ κ} → Φ ⊢ₙ τ ∶ κ → ∃[ τ' ] Ψ ⊢ₙ τ' ∶ κ
-  -- renameTypeₙ ρ (neu u)         = Σ-map₂ neu (renameTypeᵤ ρ u)
-  -- renameTypeₙ ρ (lam prf)       = Σ-map (lam _) lam (renameTypeₙ (lift ρ) prf)
-  -- renameTypeₙ ρ (fun prf₁ prf₂) = Σ-zip fun fun (renameTypeₙ ρ prf₁) (renameTypeₙ ρ prf₂)
-  -- renameTypeₙ ρ (all prf)       = Σ-map (all _) all (renameTypeₙ (lift ρ) prf)
+--   strengthenₙ : RetractableRenaming Δ Δ' r → Δ' ⊢ₙ renameType r τ ∶ κ → Δ ⊢ₙ τ ∶ κ
+--   strengthenₙ {τ = var x}     ρ (neu prfᵤ)      = neu (strengthenᵤ ρ prfᵤ)
+--   strengthenₙ {τ = fun τ₁ τ₂} ρ (fun prf₁ prf₂) = fun (strengthenₙ ρ prf₁) (strengthenₙ ρ prf₂)
+--   strengthenₙ {τ = lam κ τ}   ρ (lam prf)       = lam (strengthenₙ (lift ρ) prf)
+--   strengthenₙ {τ = app τ₁ τ₂} ρ (neu prfᵤ)      = neu (strengthenᵤ ρ prfᵤ)
+--   strengthenₙ {τ = all κ τ}   ρ (all prf)       = all (strengthenₙ (lift ρ) prf)
 
-  -- renameTypeᵤ : ∀ {Φ Ψ} → Renaming Φ Ψ → ∀ {τ κ} → Φ ⊢ᵤ τ ∶ κ → ∃[ τ' ] Ψ ⊢ᵤ τ' ∶ κ
-  -- renameTypeᵤ ρ (var prf)       = Σ-map var var (ρ prf)
-  -- renameTypeᵤ ρ (app prf₁ prf₂) = Σ-zip app app (renameTypeᵤ ρ prf₁) (renameTypeₙ ρ prf₂)
+--   strengthenᵤ : RetractableRenaming Δ Δ' r → Δ' ⊢ᵤ renameType r τ ∶ κ → Δ ⊢ᵤ τ ∶ κ
+--   strengthenᵤ {τ = var x}     ρ (var prf)       = var (ρ .retract prf)
+--   strengthenᵤ {τ = app τ₁ τ₂} ρ (app prf₁ prf₂) = app (strengthenᵤ ρ prf₁) (strengthenₙ ρ prf₂)
 
--- weakenTypeₙ : ∀ {Φ κ κ' τ} → Φ ⊢ₙ τ ∶ κ → ∃[ τ' ] κ' ∷ Φ ⊢ₙ τ' ∶ κ
--- weakenTypeₙ = renameTypeₙ λ prf → -, there prf
+-- invertHere : κ' ∷ Δ ∋ zero ↦ κ → κ ≡ κ'
+-- invertHere here = refl
+
+-- η-contract : κ' ∷ Δ ⊢ₙ weakenType τ [ var zero ] ∶ κ₂ → Δ ⊢ₙ τ ∶ tfun κ' κ₂
+-- η-contract (neu (app prf₁ (neu (var prf₂)))) rewrite invertHere prf₂ = neu (strengthenᵤ weakenRetraction prf₁)
+
+-- substKindingHereᵤ : ∀ {Φ κ κ' τ τₛ} → κ ∷ Φ ⊢ᵤ τ ∶ κ' → Φ ⊢ₙ τₛ ∶ κ → Φ ⊢ᵤ τ [ τₛ ] ∶ κ'
+-- substKindingHereᵤ = {!   !}
+
+denormalizeKinding : Δ ⊢ₙ τ ∶ κ → Δ ⊢ τ ∶ κ
+denormalizeKinding (neu (var prf))       = var prf
+denormalizeKinding (neu (app prf₁ prf₂)) = app (denormalizeKinding (neu prf₁)) (denormalizeKinding prf₂)
+denormalizeKinding (fun prf₁ prf₂)       = fun (denormalizeKinding prf₁) (denormalizeKinding prf₂)
+denormalizeKinding (all prf)             = all (denormalizeKinding prf)
+denormalizeKinding (lam prf)             = lam (denormalizeKinding prf)
+
+η-contract : Δ ⊢ lam κ₁ (app (weakenType τ) (var zero)) ∶ tfun κ₁ κ₂ → Δ ⊢ τ ∶ tfun κ₁ κ₂
+η-contract (lam (app prf (var here))) = strengthen weakenRetraction prf
+
+mutual
+  reify : Δ ⊩ τ ∶ κ → Δ ∃⊢ₙ τ ∶ κ
+  reify {κ = ⋆} prf = prf
+  reify {Δ = Δ} {τ = τ} {κ = tfun κ₁ κ₂} f with reify (f there (reflect ⟦var0⟧))
+  ... | ⟨ τ' , ⟨ prf , eq ⟩ ⟩
+    using eta-eq ← tsym (eta (η-contract (lam (extractKinding eq .proj₂))))
+    = ⟨ lam κ₁ τ' , ⟨ lam prf , ttrans (lam eq) eta-eq ⟩ ⟩
+
+  reflect : Δ ∃⊢ᵤ τ ∶ κ → Δ ⊩ τ ∶ κ
+  reflect {κ = ⋆}          ⟨ τ' , ⟨ prfᵤ , eq ⟩ ⟩ = ⟨ τ' , ⟨ neu prfᵤ , eq ⟩ ⟩
+  reflect {κ = tfun κ₁ κ₂} ⟨ τ' , ⟨ prfᵤ , eq ⟩ ⟩ {r = r} ρ prf with reify prf
+  ... | ⟨ τ₁ , ⟨ prf₁ , eq₁ ⟩ ⟩
+    using eq' ← renameType-eq ρ eq
+    using prfᵤ' ← renameKindingᵤ ρ prfᵤ
+    using ⟨ prfₐ , prfₘ ⟩ ← extractKinding eq₁
+    = reflect ⟨ app (renameType r τ') τ₁ , ⟨ app prfᵤ' prf₁ , app eq' eq₁ ⟩ ⟩
+  
+  ⟦var0⟧ : κ ∷ Δ ∃⊢ᵤ var zero ∶ κ
+  ⟦var0⟧ = ⟨ var zero , ⟨ var here , trefl (var here) ⟩ ⟩
+
+
+extendForcingSubst : ForcingSubst Δ Δ' s → Δ' ⊩ τ ∶ κ → ForcingSubst (κ ∷ Δ) Δ' (extendTypeSubst s τ)
+extendForcingSubst σ prf here        = prf
+extendForcingSubst σ _   (there prf) = σ prf
+
+-- renameForcing : ∀ {Δ Δ' f τ κ} → Renaming Δ Δ' f → Δ ⊩ τ ∶ κ → Δ' ⊩ renameType f τ ∶ κ
+-- renameForcing {κ = ⋆}         ρ prf = renameKindingᵤ ρ prf
+-- renameForcing {κ = tfun κ κ'} ρ prf = {!   !}
+-- -- renameReducibility {κ = ⋆} ρ (var prf)       = var (ρ prf)
+-- -- renameReducibility ρ (fun prf₁ prf₂) = fun (renameReducibility ρ prf₁) (renameReducibility ρ prf₂)
+-- -- renameReducibility ρ (all prf)       = all (renameReducibility (liftRenaming ρ) prf)
+-- -- renameReducibility ρ (lam prf)       = lam (renameReducibility (liftRenaming ρ) prf)
+-- -- renameReducibility ρ (app prf₁ prf₂) = app (renameReducibility ρ prf₁) (renameReducibility ρ prf₂)
+
+weakenForcing : ∀ {Δ κ κ' τ} → Δ ⊩ τ ∶ κ → κ' ∷ Δ ⊩ weakenType τ ∶ κ
+weakenForcing = renameForcing there
+
+liftForcingSubst : ForcingSubst Δ Δ' s → ForcingSubst (κ ∷ Δ) (κ ∷ Δ') (liftTypeSubst s)
+liftForcingSubst σ here        = reflect ⟦var0⟧ -- reflect (var here)
+liftForcingSubst σ (there prf) = weakenForcing (σ prf)
+
+
+idSubst : ForcingSubst Δ Δ var
+idSubst {x = x} prf = reflect ⟨ var x , ⟨ var prf , trefl (var prf) ⟩ ⟩
+
+
+-- Normalization under all possible substitutions
+infix 3 _⊧_∶_
+_⊧_∶_ : KindCtx → Type → Kind → Set
+Δ ⊧ τ ∶ κ = ∀ {Δ' s} → ForcingSubst Δ Δ' s → Δ' ⊩ substType s τ ∶ κ
+
+extractKindingFromForcing : Δ ⊩ τ ∶ κ → Δ ⊢ τ ∶ κ
+extractKindingFromForcing prf using ⟨ _ , ⟨ _ , eq ⟩ ⟩ ← reify prf = extractKinding eq .proj₂
+
+castForcing : Δ ⊢ τ ≡ₜ τ' ∶ κ → Δ ⊩ τ ∶ κ → Δ ⊩ τ' ∶ κ
+castForcing {κ = ⋆} eq ⟨ τₙ , ⟨ prfₙ , eqₙ ⟩ ⟩ = ⟨ τₙ , ⟨ prfₙ , ttrans eqₙ eq ⟩ ⟩
+castForcing {κ = tfun κ κ₁} eq f ρ prfₛ using eq' ← renameType-eq ρ eq
+  = castForcing (app eq' (trefl (extractKindingFromForcing prfₛ))) (f ρ prfₛ)
+
+⟦_⟧ₓ : Δ ∋ x ↦ κ → Δ ⊧ var x ∶ κ
+⟦ prf ⟧ₓ σ = σ prf
+
+⟦_⟧ : Δ ⊢ τ ∶ κ → Δ ⊧ τ ∶ κ
+⟦ var prf ⟧ σ = ⟦ prf ⟧ₓ σ
+⟦ fun prf₁ prf₂ ⟧ σ with ⟦ prf₁ ⟧ σ | ⟦ prf₂ ⟧ σ
+... | ⟨ τ₁ , ⟨ prf₁' , eq₁ ⟩ ⟩ | ⟨ τ₂ , ⟨ prf₂' , eq₂ ⟩ ⟩
+  = ⟨ fun τ₁ τ₂ , ⟨ fun prf₁' prf₂' , fun eq₁ eq₂ ⟩ ⟩
+⟦ all prf ⟧ σ with ⟦ prf ⟧ (liftForcingSubst σ)
+... | ⟨ τ' , ⟨ prf' , eq ⟩ ⟩ = ⟨ all _ τ' , ⟨ all prf' , all eq ⟩ ⟩
+⟦ lam {κ = κ} {κ' = κ'} {τ = τ} prf ⟧ {s = s} σ {Δ' = Δ'} {r = r} {τ' = τₛ} ρ prfₛ
+  using σ' ← (λ {x = x} {κ = κ} prf → renameForcing ρ (σ {x = x} {κ = κ} prf))
+  with prf' ← (⟦ prf ⟧ (extendForcingSubst σ' prfₛ))
+  with appDeriv ← Type.Kinding.app (substKinding (extractKindingFromForcing ∘ σ') (lam prf)) (extractKindingFromForcing prfₛ)
+  rewrite sym (substTypeAtZero-comp {s = λ x → renameType r (s x)} {τ = τ} {τₛ = τₛ})
+  rewrite sym (lifted-renameType-substType-comp {n = 1} {r = r} {s = s} {τ = τ})
+  using prf'ₖ ← extractKindingFromForcing prf'
+  = castForcing (tsym (beta appDeriv)) prf'
+⟦ app {τ₁ = τ₁} prf₁ prf₂ ⟧ {s = s} σ with prf ← ⟦ prf₁ ⟧ σ idRenaming (⟦ prf₂ ⟧ σ)
+  rewrite renameType-idRenaming-id {τ = substType s τ₁} = prf
+
+-- Lemma: application is valid
+-- apply : Γ ⊧ A ⇒ B → Γ ⊧ A → Γ ⊧ B
+-- apply f g ρ = f ρ id (g ρ)
+
+
+normalizeKinding : Δ ⊢ τ ∶ κ →  Δ ∃⊢ₙ τ ∶ κ
+normalizeKinding {τ = τ} prf with prf' ← reify (⟦ prf ⟧ idSubst) rewrite substType-id {τ = τ} = prf'

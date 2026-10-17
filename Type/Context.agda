@@ -8,4 +8,4 @@ KindCtx : Set
 KindCtx = Ctx Kind
 
 variable
-  Δ Δ' : KindCtx
+  Δ Δ' Δ'' : KindCtx

@@ -6,4 +6,4 @@ data Kind : Set where
   tfun : Kind → Kind → Kind
 
 variable
-  κ κ' κ₁ κ₁' κ₂ κ₂' : Kind
+  κ κ' κ'' κ₁ κ₁' κ₂ κ₂' : Kind

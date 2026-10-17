@@ -14,4 +14,4 @@ data Type : Set where
   all : Kind → Type → Type
 
 variable
-  τ τ' τ₁ τ₁' τ₂ τ₂' : Type
+  τ τ' τ₁ τ₁' τ₂ τ₂' τₛ : Type

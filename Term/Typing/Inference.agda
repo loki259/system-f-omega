@@ -2,7 +2,8 @@ module Term.Typing.Inference where
 
 open import Prelude
 open import Term.Typing
-open import Type.Typing.Normalization
+open import Term.Typing.Normalization
+open import Type.Equality
 
 
 -- dom≡ₜ : ∀ {Δ τ₁ τ₁' τ₂ τ₂'} → Δ ⊢ fun τ₁ τ₂ ≡ₜ fun τ₁' τ₂' ∶ ⋆ → Δ ⊢ τ₁ ≡ₜ τ₁' ∶ ⋆
