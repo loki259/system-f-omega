@@ -1,13 +1,11 @@
-Next steps ("big picture"):
+# Project Overview
 
-1. Type normalization through denotational semantics (type-level NbE):
-  - (Define what a model is: (W, ≤), w ⊩ₐ κ, w ⊩ κ, w ⊩ₛ Δ, Δ ⊧ κ, soundness)
-  - Specialize the model to (Δ, weaken), _⊢ₙ_∶_, preservation
-    + Define reify and reflect
-    + ...
-    + Define normalization function
-1. Define Reducibility for types
+Agda implementation of System Fω:
 
-2. Define (small-step) operational semantics
+- Extrinsically typed formalization with De Bruijn indices
 
-3. Prove progress and preservation
+- Kind checker for types
+
+- Sound (and not yet complete) normalizer that converts types to η-long normal forms
+
+- Type checker for terms based on normal types
