@@ -1,5 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
-
 module Context (A : Set) where
 
 open import Prelude
@@ -8,10 +6,6 @@ open import Prelude
 private variable
   a a' b : A
 
-
---------------------------------------------------------------------------------
--- Syntax
---------------------------------------------------------------------------------
 
 Ctx : Set → Set
 Ctx = List
@@ -33,12 +27,7 @@ liftIndexRenamingN (suc n) r (suc x) = suc (liftIndexRenamingN n r x)
 liftIndexRenaming : IndexRenaming → IndexRenaming
 liftIndexRenaming = liftIndexRenamingN 1
 
-lemma-contract-liftIndexRenaming : liftIndexRenamingN 1 (liftIndexRenamingN n r) ≡ liftIndexRenamingN (suc n) r
-lemma-contract-liftIndexRenaming {zero } = refl
-lemma-contract-liftIndexRenaming {suc n} = function-extensionality λ { {zero}  → refl; {suc n} → refl }
 
---------------------------------------------------------------------------------
--- Proofs
 --------------------------------------------------------------------------------
 
 infix 3 _∋_↦_
@@ -47,9 +36,9 @@ data _∋_↦_ : ∀ {A} → Ctx A → Index → A → Set where
   there : Ψ ∋ x ↦ a → (b ∷ Ψ) ∋ suc x ↦ a
 
 
-uniq-∋ : Ψ ∋ x ↦ a → Ψ ∋ x ↦ b → a ≡ b
-uniq-∋ here         here         = refl
-uniq-∋ (there prf₁) (there prf₂) = uniq-∋ prf₁ prf₂
+lookupUniqueness : Ψ ∋ x ↦ a → Ψ ∋ x ↦ b → a ≡ b
+lookupUniqueness here         here         = refl
+lookupUniqueness (there prf₁) (there prf₂) = lookupUniqueness prf₁ prf₂
 
 
 lookup : (Ψ : Ctx A) → Ψ ∋ x ↦ a → A
@@ -89,8 +78,6 @@ liftRenamingN (suc n) {as = a ∷ as} ρ = λ { here → here; (there prf) → t
 liftRenaming : Renaming Φ Ψ r → Renaming (a ∷ Φ) (a ∷ Ψ) (liftIndexRenaming r)
 liftRenaming {a = a} = liftRenamingN 1 {as = a ∷ []}
 
--- lemma-contract-liftRenaming : ∀ {n a} {as : Vec A n} → liftRenamingN 1 {as = a ∷ []} (liftRenamingN n {as = as} ρ) ≡ liftRenamingN (suc n) {as = a ∷ as} ρ
--- lemma-contract-liftRenaming = {!   !}
 
 record RetractableRenaming (Φ : Ctx A) (Ψ : Ctx A) (r : IndexRenaming) : Set where
   field
@@ -111,7 +98,6 @@ weakenN zero    {as = []}     prf = prf
 weakenN (suc n) {as = a ∷ as} prf = there (weakenN n {as = as} prf)
 
 weaken : Φ ∋ x ↦ a → a' ∷ Φ ∋ suc x ↦ a
--- weaken prf = there prf
 weaken {a' = a'} = weakenN 1 {as = a' ∷ []}
 
 dropN : (n : Nat) → ∀ {as : Vec A n} → appendN n as Φ ∋ n + x ↦ a → Φ ∋ x ↦ a
@@ -119,10 +105,8 @@ dropN zero    {as = []}     prf         = prf
 dropN (suc n) {as = a ∷ as} (there prf) = dropN n {as = as} prf
 
 drop : a' ∷ Φ ∋ suc x ↦ a → Φ ∋ x ↦ a
--- drop (there prf) = prf
 drop {a' = a'} = dropN 1 {as = a' ∷ []}
 
--- drop∘weaken-id : ∀ {prf : Φ ∋ x ↦ a} → drop {a' = a'} (weaken {a' = a'} prf) ≡ prf
 drop∘weaken-id : ∀ {n : Nat} {as : Vec A n} {prf : Φ ∋ x ↦ a} → dropN n {as = as} (weakenN n {as = as} prf) ≡ prf
 drop∘weaken-id {n = zero}  {as = []}     = refl
 drop∘weaken-id {n = suc n} {as = a ∷ as} = drop∘weaken-id {n = n}

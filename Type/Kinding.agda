@@ -7,36 +7,19 @@ open import Type.Context
 
 infix 3 _⊢_∶_
 data _⊢_∶_ (Δ : KindCtx) : Type → Kind → Set where
-  var : ∀ {x κ} → Δ ∋ x ↦ κ → Δ ⊢ var x ∶ κ
-  fun : ∀ {τ₁ τ₂} → Δ ⊢ τ₁ ∶ ⋆ → Δ ⊢ τ₂ ∶ ⋆ → Δ ⊢ fun τ₁ τ₂ ∶ ⋆
-  all : ∀ {κ τ} → κ ∷ Δ ⊢ τ ∶ ⋆ → Δ ⊢ all κ τ ∶ ⋆
-  lam : ∀ {κ κ' τ} → κ ∷ Δ ⊢ τ ∶ κ' → Δ ⊢ lam κ τ ∶ tfun κ κ'
-  app : ∀ {τ₁ τ₂ κ κ'} → Δ ⊢ τ₁ ∶ tfun κ κ' → Δ ⊢ τ₂ ∶ κ → Δ ⊢ app τ₁ τ₂ ∶ κ'
+  var : Δ ∋ x ↦ κ → Δ ⊢ var x ∶ κ
+  fun : Δ ⊢ τ₁ ∶ ⋆ → Δ ⊢ τ₂ ∶ ⋆ → Δ ⊢ fun τ₁ τ₂ ∶ ⋆
+  all : κ ∷ Δ ⊢ τ ∶ ⋆ → Δ ⊢ all κ τ ∶ ⋆
+  lam : κ ∷ Δ ⊢ τ ∶ κ' → Δ ⊢ lam κ τ ∶ κ ⇒ κ'
+  app : Δ ⊢ τ₁ ∶ κ ⇒ κ' → Δ ⊢ τ₂ ∶ κ → Δ ⊢ app τ₁ τ₂ ∶ κ'
 
 
-_≟ₖ_ : DecidableEquality Kind
-⋆ ≟ₖ ⋆ = yes refl
-tfun κ₁ κ₁' ≟ₖ tfun κ₂ κ₂' with κ₁ ≟ₖ κ₂
-... | no ref = no λ { refl → ref refl }
-... | yes refl with κ₁' ≟ₖ κ₂'
-...   | no ref   = no λ { refl → ref refl }
-...   | yes refl = yes refl
-⋆ ≟ₖ tfun _ _ = no λ ()
-tfun _ _ ≟ₖ ⋆ = no λ ()
-
-
-dom≡ₖ : ∀ {κ₁ κ₁' κ₂ κ₂'} → tfun κ₁ κ₂ ≡ tfun κ₁' κ₂' → κ₁ ≡ κ₁'
-dom≡ₖ refl = refl
-
-rng≡ₖ : ∀ {κ₁ κ₁' κ₂ κ₂'} → tfun κ₁ κ₂ ≡ tfun κ₁' κ₂' → κ₂ ≡ κ₂'
-rng≡ₖ refl = refl
-
-uniq-⊢ₖ : ∀ {Δ τ κ κ'} → Δ ⊢ τ ∶ κ → Δ ⊢ τ ∶ κ' → κ ≡ κ'
-uniq-⊢ₖ (var prf)    (var prf')    = uniq-∋ prf prf'
-uniq-⊢ₖ (fun _ _)    (fun _ _)     = refl
-uniq-⊢ₖ (all _)      (all _)       = refl
-uniq-⊢ₖ (lam prf)    (lam prf')    = cong (tfun _) (uniq-⊢ₖ prf prf')
-uniq-⊢ₖ (app prf₁ _) (app prf₁' _) = rng≡ₖ (uniq-⊢ₖ prf₁ prf₁')
+kindingUniqueness : Δ ⊢ τ ∶ κ → Δ ⊢ τ ∶ κ' → κ ≡ κ'
+kindingUniqueness (var prf)    (var prf')    = lookupUniqueness prf prf'
+kindingUniqueness (fun _ _)    (fun _ _)     = refl
+kindingUniqueness (all _)      (all _)       = refl
+kindingUniqueness (lam prf)    (lam prf')    = cong (λ κ' → _ ⇒ κ') (kindingUniqueness prf prf')
+kindingUniqueness (app prf₁ _) (app prf₁' _) = ⇒-inj (kindingUniqueness prf₁ prf₁') .proj₂
 
 mutual
   inferKind : ∀ (Δ : KindCtx) (τ : Type) → Dec (∃[ κ ] Δ ⊢ τ ∶ κ)
@@ -49,13 +32,13 @@ mutual
   ...   | no ref   = no λ { ⟨ ⋆ , fun _ prf₂ ⟩ → ref prf₂ }
   ...   | yes prf₂ = yes ⟨ ⋆ , fun prf₁ prf₂ ⟩
   inferKind Δ (lam κ τ) with inferKind (κ ∷ Δ) τ
-  ... | no ref           = no λ { ⟨ tfun κ κ' , lam prf ⟩ → ref ⟨ κ' , prf ⟩ }
-  ... | yes ⟨ κ' , prf ⟩ = yes ⟨ tfun κ κ' , lam prf ⟩
+  ... | no ref           = no λ { ⟨ κ ⇒ κ' , lam prf ⟩ → ref ⟨ κ' , prf ⟩ }
+  ... | yes ⟨ κ' , prf ⟩ = yes ⟨ κ ⇒ κ' , lam prf ⟩
   inferKind Δ (app τ₁ τ₂) with inferKind Δ τ₁
-  ... | no ref           = no λ { ⟨ κ' , app prf₁ _ ⟩ → ref ⟨ tfun _ κ' , prf₁ ⟩ }
-  ... | yes ⟨ ⋆ , prf₁ ⟩ = no λ { ⟨ κ , app prf₁' _ ⟩ → case (uniq-⊢ₖ prf₁ prf₁') of λ () }
-  ... | yes ⟨ tfun κ κ' , prf₁ ⟩ with checkKind Δ κ τ₂
-  ...   | no ref   = no λ { ⟨ κ , app prf₁' prf₂ ⟩ → case dom≡ₖ (uniq-⊢ₖ prf₁ prf₁') of λ { refl → ref prf₂ } }
+  ... | no ref           = no λ { ⟨ κ' , app prf₁ _ ⟩ → ref ⟨ _ ⇒ κ' , prf₁ ⟩ }
+  ... | yes ⟨ ⋆ , prf₁ ⟩ = no λ { ⟨ κ , app prf₁' _ ⟩ → case (kindingUniqueness prf₁ prf₁') of λ () }
+  ... | yes ⟨ κ ⇒ κ' , prf₁ ⟩ with checkKind Δ κ τ₂
+  ...   | no ref   = no λ { ⟨ κ , app prf₁' prf₂ ⟩ → case ⇒-inj (kindingUniqueness prf₁ prf₁') .proj₁ of λ { refl → ref prf₂ } }
   ...   | yes prf₂ = yes ⟨ κ' , app prf₁ prf₂ ⟩
   inferKind Δ (all κ τ) with checkKind (κ ∷ Δ) ⋆ τ
   ... | no ref = no λ { ⟨ ⋆ , all prf ⟩ → ref prf }
@@ -65,5 +48,5 @@ mutual
   checkKind Δ κ τ with inferKind Δ τ
   ... | no ref = no λ prf → ref ⟨ κ , prf ⟩
   ... | yes ⟨ κ' , prf ⟩ with κ' ≟ₖ κ
-  ...   | no ref   = no λ prf' → ref (uniq-⊢ₖ prf prf')
+  ...   | no ref   = no λ prf' → ref (kindingUniqueness prf prf')
   ...   | yes refl = yes prf

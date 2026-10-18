@@ -6,39 +6,12 @@ open import Type.Context
 open import Type.Kinding
 
 
---------------------------------------------------------------------------------
--- Syntax
---------------------------------------------------------------------------------
-
 renameType : IndexRenaming → Type → Type
 renameType r (var x)     = var (r x)
 renameType r (fun τ₁ τ₂) = fun (renameType r τ₁) (renameType r τ₂)
 renameType r (lam κ τ)   = lam κ (renameType (liftIndexRenaming r) τ)
 renameType r (app τ₁ τ₂) = app (renameType r τ₁) (renameType r τ₂)
 renameType r (all κ τ)   = all κ (renameType (liftIndexRenaming r) τ)
-
-lifted-IndexRenaming-∘ : liftIndexRenamingN n r' (liftIndexRenamingN n r x) ≡ liftIndexRenamingN n (r' ∘ r) x
-lifted-IndexRenaming-∘ {n = zero}              = refl
-lifted-IndexRenaming-∘ {n = suc n} {x = zero}  = refl
-lifted-IndexRenaming-∘ {n = suc n} {x = suc x} = cong suc (lifted-IndexRenaming-∘ {n = n})
-
-lifted-renameType-∘ : renameType (liftIndexRenamingN n r') (renameType (liftIndexRenamingN n r) τ) ≡ renameType (liftIndexRenamingN n (r' ∘ r)) τ
-lifted-renameType-∘ {n = n} {τ = var x}     = cong var (lifted-IndexRenaming-∘ {n = n})
-lifted-renameType-∘ {n = n} {τ = fun τ₁ τ₂} = cong₂ fun (lifted-renameType-∘ {n = n}) (lifted-renameType-∘ {n = n})
-lifted-renameType-∘ {n = n} {τ = app τ₁ τ₂} = cong₂ app (lifted-renameType-∘ {n = n}) (lifted-renameType-∘ {n = n})
-lifted-renameType-∘ {n = n} {r' = r'} {r = r} {τ = lam κ τ}
-  rewrite lemma-contract-liftIndexRenaming {n = n} {r = r'}
-  rewrite lemma-contract-liftIndexRenaming {n = n} {r = r}
-  rewrite lemma-contract-liftIndexRenaming {n = n} {r = r' ∘ r}
-  = cong (lam κ) (lifted-renameType-∘ {n = suc n})
-lifted-renameType-∘ {n = n} {r' = r'} {r = r} {τ = all κ τ}
-  rewrite lemma-contract-liftIndexRenaming {n = n} {r = r'}
-  rewrite lemma-contract-liftIndexRenaming {n = n} {r = r}
-  rewrite lemma-contract-liftIndexRenaming {n = n} {r = r' ∘ r}
-  = cong (all κ) (lifted-renameType-∘ {n = suc n})
-
-renameType-∘ : renameType r' (renameType r τ) ≡ renameType (r' ∘ r) τ
-renameType-∘ = lifted-renameType-∘ {n = zero}
 
 
 weakenType : Type → Type
@@ -59,10 +32,6 @@ liftTypeSubstN (suc n) s (suc x) = weakenType (liftTypeSubstN n s x)
 liftTypeSubst : TypeSubst → TypeSubst
 liftTypeSubst = liftTypeSubstN 1
 
-lemma-contract-liftTypeSubst : liftTypeSubstN 1 (liftTypeSubstN n s) ≡ liftTypeSubstN (suc n) s
-lemma-contract-liftTypeSubst {n = 0}     = refl
-lemma-contract-liftTypeSubst {n = suc n} = function-extensionality λ { {0}  → refl; {suc n} → refl }
-
 substType : TypeSubst → Type → Type
 substType s (var x)     = s x
 substType s (fun τ₁ τ₂) = fun (substType s τ₁) (substType s τ₂)
@@ -82,93 +51,6 @@ _[_] : Type → Type → Type
 τ [ τₛ ] = substTypeAtZero τ τₛ
 
 
---------------------------------------------------------------------------------
--- Syntax (normal)
---------------------------------------------------------------------------------
-
--- mutual
---   renameTypeₙ : IndexRenaming → Typeₙ → Typeₙ
---   renameTypeₙ f (neu τᵤ)    = neu (renameTypeᵤ f τᵤ)
---   renameTypeₙ f (fun τ₁ τ₂) = fun (renameTypeₙ f τ₁) (renameTypeₙ f τ₂)
---   renameTypeₙ f (lam x τ)   = lam x (renameTypeₙ (liftIndexRenaming f) τ)
---   renameTypeₙ f (all x τ)   = all x (renameTypeₙ (liftIndexRenaming f) τ)
-
---   renameTypeᵤ : IndexRenaming → Typeᵤ → Typeᵤ
---   renameTypeᵤ f (var x)     = var (f x)
---   renameTypeᵤ f (app τ₁ τ₂) = app (renameTypeᵤ f τ₁) (renameTypeₙ f τ₂)
-
--- weakenTypeₙ : Typeₙ → Typeₙ
--- weakenTypeₙ τ = renameTypeₙ suc τ
-
-
--- TypeSubstₙ : Set
--- TypeSubstₙ = Nat → Typeₙ
-
--- -- TypeSubstᵤ : Set
--- -- TypeSubstᵤ = Nat → Typeᵤ
-
--- liftTypeSubstₙ : TypeSubstₙ → TypeSubstₙ
--- liftTypeSubstₙ f zero    = neu (var zero)
--- liftTypeSubstₙ f (suc x) = weakenTypeₙ (f x)
-
--- mutual
---   substTypeₙ : TypeSubstₙ → Typeₙ → Typeₙ
---   substTypeₙ f (neu τᵤ)    = substTypeᵤ f τᵤ
---   substTypeₙ f (fun τ₁ τ₂) = fun (substTypeₙ f τ₁) (substTypeₙ f τ₂)
---   substTypeₙ f (lam x τ)   = lam x (substTypeₙ (liftTypeSubstₙ f) τ)
---   substTypeₙ f (all x τ)   = all x (substTypeₙ (liftTypeSubstₙ f) τ)
-
---   substTypeᵤ : TypeSubstₙ → Typeᵤ → Typeₙ
---   substTypeᵤ f (var x)     = f x
---   substTypeᵤ f (app τ₁ τ₂) with substTypeᵤ f τ₁
---   ... | neu τᵤ    = neu (app τᵤ (substTypeₙ f τ₂))
---   ... | fun τ₁ τ₂ = {!   !}
---   ... | lam x τ   = substTypeAtZeroₙ (lam x τ) (substTypeₙ f τ₂)
---   ... | all x τ   = {!   !}
-
---   extendTypeSubstₙ : TypeSubstₙ → Typeₙ → TypeSubstₙ
---   extendTypeSubstₙ f τ zero    = τ
---   extendTypeSubstₙ f τ (suc x) = f x
-
---   substTypeAtZeroₙ : Typeₙ → Typeₙ → Typeₙ
---   substTypeAtZeroₙ τ τₛ = substTypeₙ (extendTypeSubstₙ (neu ∘ var) τₛ) τ
-
--- infix 5 _[_]ₙ
--- _[_]ₙ : Typeₙ → Typeₙ → Typeₙ
--- τ [ τₛ ]ₙ = substTypeAtZeroₙ τ τₛ
-
--- ⊨_ : Typeₙ → Typeₙ
--- ⊨ neu τᵤ = neu τᵤ
--- ⊨ fun τ₁ τ₂ = fun τ₁ τ₂
--- ⊨ all κ τ = all κ τ
--- ⊨ lam κ τ = neu (lam κ τ) ⊎ IndexRenaming → ⊨ κ → ⊨ κ'
-
--- data SemType : Set where
---   base : Typeᵤ → SemType
---   tfun : (IndexRenaming → SemType → SemType) → SemType
-
--- reifyTypeₙ : SemType → Typeₙ
--- reifyTypeₙ = {!   !}
-
--- reifyTypeᵤ : SemType → Typeᵤ
--- reifyTypeᵤ = {!   !}
-
--- _⊨_∶_ : KindCtx → SemType → Kind → Set
--- Δ ⊨ τₛ ∶ ⋆         = Δ ⊢ₙ reifyTypeₙ τₛ ∶ ⋆
--- Δ ⊨ τₛ ∶ tfun κ κ' = Δ ⊢ᵤ reifyTypeᵤ τₛ ∶ (tfun κ κ') ⊎ ∀ {Δ' f} → Renaming Δ Δ' f → Δ' ⊨ τₛ ∶ κ → Δ' ⊨ τₛ ∶ κ'
--- _⊨_ : KindCtx → Kind → Set
--- Δ ⊨ ⋆         = ∃[ τ ] Δ ⊢ₙ τ ∶ ⋆
--- Δ ⊨ tfun κ κ' = ∃[ τ ] Δ ⊢ᵤ τ ∶ tfun κ κ' ⊎ ∀ {Δ' f} → Renaming Δ Δ' f → Δ' ⊨ κ → Δ' ⊨ κ'
-
--- _⊨_∶_ : KindCtx → SemType → Kind → Set
--- Δ ⊨ base τᵤ ∶ ⋆         = Δ ⊢ᵤ τᵤ ∶ ⋆
--- Δ ⊨ tfun f τₛ ∶ tfun κ κ' = ∀ {Δ' f} → Renaming Δ Δ' f → Δ' ⊨ τₛ ∶ κ → Δ' ⊨ τₛ ∶ κ'
-
-
--- eval : ∀{Φ Ψ κ} → Ψ ⊢ κ → Env Ψ Φ → Φ ⊨ κ
-
---------------------------------------------------------------------------------
--- Proofs
 --------------------------------------------------------------------------------
 
 renameKinding : ∀ {Φ Ψ f} → Renaming Φ Ψ f → ∀ {τ κ} → Φ ⊢ τ ∶ κ → Ψ ⊢ renameType f τ ∶ κ
@@ -206,11 +88,44 @@ substKindingHere prf prfₛ = substKinding (extendKindingSubst var prfₛ) prf
 
 --------------------------------------------------------------------------------
 
--- FIXME: move to Context?
+lemma-contract-liftIndexRenaming : liftIndexRenamingN 1 (liftIndexRenamingN n r) ≡ liftIndexRenamingN (suc n) r
+lemma-contract-liftIndexRenaming {zero } = refl
+lemma-contract-liftIndexRenaming {suc n} = function-extensionality λ { {zero}  → refl; {suc n} → refl }
+
+lemma-contract-liftTypeSubst : liftTypeSubstN 1 (liftTypeSubstN n s) ≡ liftTypeSubstN (suc n) s
+lemma-contract-liftTypeSubst {n = 0}     = refl
+lemma-contract-liftTypeSubst {n = suc n} = function-extensionality λ { {0}  → refl; {suc n} → refl }
+
+
+lifted-IndexRenaming-∘ : liftIndexRenamingN n r' (liftIndexRenamingN n r x) ≡ liftIndexRenamingN n (r' ∘ r) x
+lifted-IndexRenaming-∘ {n = zero}              = refl
+lifted-IndexRenaming-∘ {n = suc n} {x = zero}  = refl
+lifted-IndexRenaming-∘ {n = suc n} {x = suc x} = cong suc (lifted-IndexRenaming-∘ {n = n})
+
+lifted-renameType-∘ : renameType (liftIndexRenamingN n r') (renameType (liftIndexRenamingN n r) τ) ≡ renameType (liftIndexRenamingN n (r' ∘ r)) τ
+lifted-renameType-∘ {n = n} {τ = var x}     = cong var (lifted-IndexRenaming-∘ {n = n})
+lifted-renameType-∘ {n = n} {τ = fun τ₁ τ₂} = cong₂ fun (lifted-renameType-∘ {n = n}) (lifted-renameType-∘ {n = n})
+lifted-renameType-∘ {n = n} {τ = app τ₁ τ₂} = cong₂ app (lifted-renameType-∘ {n = n}) (lifted-renameType-∘ {n = n})
+lifted-renameType-∘ {n = n} {r' = r'} {r = r} {τ = lam κ τ}
+  rewrite lemma-contract-liftIndexRenaming {n = n} {r = r'}
+  rewrite lemma-contract-liftIndexRenaming {n = n} {r = r}
+  rewrite lemma-contract-liftIndexRenaming {n = n} {r = r' ∘ r}
+  = cong (lam κ) (lifted-renameType-∘ {n = suc n})
+lifted-renameType-∘ {n = n} {r' = r'} {r = r} {τ = all κ τ}
+  rewrite lemma-contract-liftIndexRenaming {n = n} {r = r'}
+  rewrite lemma-contract-liftIndexRenaming {n = n} {r = r}
+  rewrite lemma-contract-liftIndexRenaming {n = n} {r = r' ∘ r}
+  = cong (all κ) (lifted-renameType-∘ {n = suc n})
+
+renameType-∘ : renameType r' (renameType r τ) ≡ renameType (r' ∘ r) τ
+renameType-∘ = lifted-renameType-∘ {n = zero}
+
+
+
 idRenaming : Renaming Δ Δ id
 idRenaming = id
 
--- FIXME: move to Context?
+
 liftIndexRenaming-id : liftIndexRenamingN n id x ≡ x
 liftIndexRenaming-id {n = 0}                 = refl
 liftIndexRenaming-id {n = suc n} {x = 0}     = refl
