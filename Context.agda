@@ -113,3 +113,58 @@ drop∘weaken-id {n = suc n} {as = a ∷ as} = drop∘weaken-id {n = n}
 
 weakenRetraction : RetractableRenaming Φ (a ∷ Φ) suc
 weakenRetraction {a = a} = record { rename = weaken; retract = drop; retract∘rename-id = drop∘weaken-id {as = a ∷ []} }
+
+
+--------------------------------------------------------------------------------
+
+infixl 5 _\\_
+_\\_ : Ctx A → Index → Ctx A
+[]      \\ _       = []
+(a ∷ Ψ) \\ zero    = Ψ
+(a ∷ Ψ) \\ (suc x) = a ∷ (Ψ \\ x)
+
+weakenIndexAt : Index → Index → Index
+weakenIndexAt zero     x       = suc x
+weakenIndexAt (suc _)  zero    = zero
+weakenIndexAt (suc xᵣ) (suc x) = suc (weakenIndexAt xᵣ x)
+
+--------------------------------------------------------------------------------
+
+weakenIndexing : Ψ \\ xᵣ ∋ x ↦ a → Ψ ∋ weakenIndexAt xᵣ x ↦ a
+weakenIndexing {Ψ = _ ∷ Ψ'} {xᵣ = zero}   p         = there p
+weakenIndexing {Ψ = _ ∷ Ψ'} {xᵣ = suc xᵣ} here      = here
+weakenIndexing {Ψ = _ ∷ Ψ'} {xᵣ = suc xᵣ} (there p) = there (weakenIndexing p)
+
+weakenIndexingAt : (xᵣ : Index) → Ψ \\ xᵣ ∋ x ↦ a → Ψ ∋ weakenIndexAt xᵣ x ↦ a
+weakenIndexingAt {Ψ = _ ∷ Ψ'} zero     p         = there p
+weakenIndexingAt {Ψ = _ ∷ Ψ'} (suc xᵣ) here      = here
+weakenIndexingAt {Ψ = _ ∷ Ψ'} (suc xᵣ) (there p) = there (weakenIndexingAt xᵣ p)
+
+strengthenIndexing : Ψ ∋ weakenIndexAt xᵣ x ↦ a → Ψ \\ xᵣ ∋ x ↦ a
+strengthenIndexing {xᵣ = zero}   {x = zero}  (there p) = p
+strengthenIndexing {xᵣ = zero}   {x = suc x} (there p) = p
+strengthenIndexing {xᵣ = suc _}  {x = zero}  here      = here
+strengthenIndexing {xᵣ = suc xᵣ} {x = suc x} (there p) = there (strengthenIndexing {xᵣ = xᵣ} p)
+
+strengthenIndexingAt : (xᵣ : Index) → Ψ ∋ weakenIndexAt xᵣ x ↦ a → Ψ \\ xᵣ ∋ x ↦ a
+strengthenIndexingAt {x = zero}  zero     (there p) = p
+strengthenIndexingAt {x = suc x} zero     (there p) = p
+strengthenIndexingAt {x = zero}  (suc _)  here      = here
+strengthenIndexingAt {x = suc x} (suc xᵣ) (there p) = there (strengthenIndexingAt xᵣ p)
+
+lemma-existsWeakenedIndex : x ≢ xᵣ → ∃[ x' ] x ≡ weakenIndexAt xᵣ x'
+lemma-existsWeakenedIndex {x = zero}  {xᵣ = zero}   ref with () ← ref refl
+lemma-existsWeakenedIndex {x = zero}  {xᵣ = suc xᵣ} ref = ⟨ zero , refl ⟩
+lemma-existsWeakenedIndex {x = suc x} {xᵣ = zero}   ref = ⟨ x , refl ⟩
+lemma-existsWeakenedIndex {x = suc x} {xᵣ = suc xᵣ} ref with x ≟ₓ xᵣ
+... | no ref'  = Σ-map suc (cong suc) (lemma-existsWeakenedIndex ref')
+... | yes refl with () ← ref refl
+
+
+-- data _⊢_↦_≡ₓ_↦_ (Ψ : Ctx A) : Index → A → Index → A → Set where
+--   -- weakened : Ψ ∋ x ↦ a → Ψ \\ x ∋ x' ↦ a' → Ψ ⊢ x ↦ a ≡ₓ weakenIndex x x' ↦ a'
+--   weakened : Ψ ⊢ x ↦ a ≡ₓ weakenIndex x x' ↦ a' → Ψ ⊢ x ↦ a ≡ₓ weakenIndex x x' ↦ a'
+--   refl     : Ψ ∋ x ↦ a → Ψ ⊢ x ↦ a ≡ₓ x ↦ a
+
+-- postulate checkIndexingEquality : Ψ ∋ x ↦ a → Ψ ∋ x' ↦ a' → Dec (x ≡ x' × a ≡ a')
+

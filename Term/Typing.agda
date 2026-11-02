@@ -6,7 +6,7 @@ open import Term.Context
 open import Type.Kinding
 open import Type.Substitution
 open import Type.Equality
-open import Type.Normalization
+open import Type.NormalizationByEvaluation
 
 
 infix 3 _,_⊢_∶_
