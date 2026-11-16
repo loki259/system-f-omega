@@ -11,7 +11,7 @@ open import Type.SpineForm.Weakening
 mutual
   substTypeₛ : Typeₛ → Index → Kind → Typeₛ → Typeₛ
   substTypeₛ (⟨ var x ⟩ τs)     xₛ κₛ τₛ with x ≟ₓ xₛ
-  ... | no ref   with ⟨ x' , _ ⟩ ← lemma-existsWeakenedIndex ref = ⟨ var x' ⟩ substSpine τs xₛ κₛ τₛ
+  ... | no ref   with ⟨ x' , _ ⟩ ← lemma-inequality-implies-weakening-exists ref = ⟨ var x' ⟩ substSpine τs xₛ κₛ τₛ
   ... | yes refl = applyKindedTypeToSpine κₛ τₛ (substSpine τs xₛ κₛ τₛ)
   substTypeₛ (⟨ fun τ₁ τ₂ ⟩ τs) xₛ κₛ τₛ = ⟨ fun (substTypeₛ τ₁ xₛ κₛ τₛ) (substTypeₛ τ₂ xₛ κₛ τₛ) ⟩ substSpine τs xₛ κₛ τₛ
   substTypeₛ (⟨ lam κ τ ⟩ τs)   xₛ κₛ τₛ = ⟨ lam κ (substTypeₛ τ (suc xₛ) κₛ (weakenTypeAtₛ zero τₛ)) ⟩ substSpine τs xₛ κₛ τₛ
@@ -19,7 +19,7 @@ mutual
 
 -- substTypeₕ : Typeₕ → Index → Kind → Typeₛ → Typeₛ
 -- substTypeₕ (var x)     xₛ κₛ τₛ with x ≟ₓ xₛ
--- ... | no ref   with ⟨ x' , _ ⟩ ← lemma-existsWeakenedIndex ref = ⟨ var x' ⟩ []
+-- ... | no ref   with ⟨ x' , _ ⟩ ← lemma-inequality-implies-weakening-exists ref = ⟨ var x' ⟩ []
 -- ... | yes refl = τₛ
 -- substTypeₕ (fun τ₁ τ₂) xₛ κₛ τₛ = ⟨ fun (substTypeₛ τ₁ xₛ κₛ τₛ) (substTypeₛ τ₂ xₛ κₛ τₛ) ⟩ []
 -- substTypeₕ (lam κ τ)   xₛ κₛ τₛ = ⟨ lam κ (substTypeₛ τ (suc xₛ) κₛ (weakenTypeAtₛ zero τₛ)) ⟩ []
@@ -98,7 +98,7 @@ mutual
 
   substKindingᵤ : ∀ {τᵤ τₙₛ} → Δ ⊢ᵤ τᵤ ∶ ⋆ → Δ ∋ xₛ ↦ κₛ → Δ \\ xₛ ⊢ₙ τₙₛ ∶ κₛ → Δ \\ xₛ ⊢ₙ substTypeₛ τᵤ xₛ κₛ τₙₛ ∶ ⋆
   substKindingᵤ {xₛ = xₛ} (⟨_⟩_ {x = x} pₓ ps) pₓₛ pₛ with x ≟ₓ xₛ
-  ... | no ref   with ⟨ x' , refl ⟩ ← lemma-existsWeakenedIndex ref = neu (⟨ strengthenIndexingAt xₛ pₓ ⟩ substKindingSpineₙ ps pₓₛ pₛ)
+  ... | no ref   with ⟨ x' , refl ⟩ ← lemma-inequality-implies-weakening-exists ref = neu (⟨ strengthenIndexingAt xₛ pₓ ⟩ substKindingSpineₙ ps pₓₛ pₛ)
   ... | yes refl with refl ← lookupUniqueness pₓ pₓₛ = applyToKindingSpineₙ pₛ (substKindingSpineₙ ps pₓₛ pₛ)
 
   substKindingSpineₙ : ∀ {τₙₛ} → Δ ∣ κ ⊢ₙ τs ∶ κ' → Δ ∋ xₛ ↦ κₛ → Δ \\ xₛ ⊢ₙ τₙₛ ∶ κₛ → Δ \\ xₛ ∣ κ ⊢ₙ substSpine τs xₛ κₛ τₙₛ ∶ κ'

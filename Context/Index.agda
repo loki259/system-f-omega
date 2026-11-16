@@ -1,3 +1,3 @@
-module Index where
+module Context.Index where
 
 open import Prelude

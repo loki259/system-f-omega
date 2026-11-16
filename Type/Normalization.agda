@@ -1,3 +1,6 @@
+{-# OPTIONS --allow-incomplete-matches #-}
+{-# OPTIONS --allow-unsolved-metas #-}
+
 module Type.Normalization where
 
 open import Prelude
@@ -282,7 +285,7 @@ mutual
     rewrite lemma-\\-with-consecutive-indices pₓₛ pₓₛ'
     = refl (neu (⟨ pₓ ⟩ []))
   lemma-applyKindedTypeToSpineₙ-expansion x≤xₛ pₓ (p ∷ ps) pₓₛ pₓₛ'
-    rewrite sym (extract≡ (lemma-substTypeₙ-expansion p pₓₛ pₓₛ'))
+    -- rewrite sym (extract≡ (lemma-substTypeₙ-expansion p pₓₛ pₓₛ'))
     -- rewrite sym (extract≡ (lemma-applyKindedTypeToSpineₙ-expansion pₓ ps pₓₛ pₓₛ'))
     = {!   !}
 

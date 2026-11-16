@@ -4,8 +4,8 @@ open import Prelude
 open import Term
 open import Term.Context
 open import Type.Kinding
-open import Type.Substitution
-open import Type.Equality
+open import Type.SubstitutionAtZero
+open import Type.EqualityWRTSubstitutionAtZero
 open import Type.NormalizationByEvaluation
 
 

@@ -1,0 +1,3 @@
+name: system-f-omega
+depend: standard-library
+include: .

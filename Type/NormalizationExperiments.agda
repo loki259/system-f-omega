@@ -38,7 +38,7 @@ open import Type.NormalForm.Substitution
 normalizeWellKindedType : (τ : Type) → Δ ⊢ τ ∶ κ → Typeₙ
 normalizeWellKindedType (var x)     (var {κ = κ} p) = η-expandTypeᵤ κ (⟨ x ⟩ [])
 normalizeWellKindedType (fun τ₁ τ₂) (fun p₁ p₂)     = fun (normalizeWellKindedType τ₁ p₁) (normalizeWellKindedType τ₂ p₂)
-normalizeWellKindedType (app τ₁ τ₂) (app p₁ p₂)     = applyTypesₙ (normalizeWellKindedType τ₁ p₁) (normalizeWellKindedType τ₂ p₂)
+normalizeWellKindedType (app τ₁ τ₂) (app p₁ p₂)     = applyTypeₙ (normalizeWellKindedType τ₁ p₁) (normalizeWellKindedType τ₂ p₂)
 normalizeWellKindedType (lam κ τ)   (lam p)         = lam κ (normalizeWellKindedType τ p)
 normalizeWellKindedType (all κ τ)   (all p)         = all κ (normalizeWellKindedType τ p)
 
@@ -82,7 +82,7 @@ normalizeWellKindedType (all κ τ)   (all p)         = all κ (normalizeWellKin
 
 normalizeKinding' : (p : Δ ⊢ τ ∶ κ) → Δ ⊢ₙ normalizeWellKindedType τ p ∶ κ
 normalizeKinding' (var p)     = η-expandKindingᵤ (⟨ p ⟩ [])
-normalizeKinding' (app p₁ p₂) = applyKindingsₙ (normalizeKinding' p₁) (normalizeKinding' p₂)
+normalizeKinding' (app p₁ p₂) = applyKindingₙ (normalizeKinding' p₁) (normalizeKinding' p₂)
 normalizeKinding' (fun p₁ p₂) = fun (normalizeKinding' p₁) (normalizeKinding' p₂)
 normalizeKinding' (lam p)     = lam (normalizeKinding' p)
 normalizeKinding' (all p)     = all (normalizeKinding' p)
