@@ -16,7 +16,7 @@ mutual
 
   substTypeᵤ : Typeᵤ → Index → Kind → Typeₙ → Typeₙ
   substTypeᵤ (⟨ x ⟩ τs) xₛ κₛ τₛ with x ≟ₓ xₛ
-  ... | no ref with ⟨ x' , _ ⟩ ← lemma-existsWeakenedIndex ref = neu (⟨ x' ⟩ substSpineₙ τs xₛ κₛ τₛ)
+  ... | no ref   with ⟨ x' , _ ⟩ ← lemma-inequality-implies-weakening-exists ref = neu (⟨ x' ⟩ substSpineₙ τs xₛ κₛ τₛ)
   ... | yes refl = applyKindedTypeToSpineₙ κₛ τₛ (substSpineₙ τs xₛ κₛ τₛ)
 
   substSpineₙ : Spineₙ → Index → Kind → Typeₙ → Spineₙ
@@ -57,7 +57,7 @@ applyToSpineₙ τ (τₛ ∷ τs) = applyToSpineₙ (applyTypeₙ τ τₛ) τs
 
 --   substTypeᵤ' : Typeᵤ → Index → Typeₙ → Typeₙ
 --   substTypeᵤ' (⟨ x ⟩ τs) xₛ τₛ with x ≟ₓ xₛ
---   ... | no ref with ⟨ x' , _ ⟩ ← lemma-existsWeakenedIndex ref = neu (⟨ x' ⟩ substSpineₙ' τs xₛ τₛ)
+--   ... | no ref with ⟨ x' , _ ⟩ ← lemma-inequality-implies-weakening-exists ref = neu (⟨ x' ⟩ substSpineₙ' τs xₛ τₛ)
 --   ... | yes refl = applyToSpineₙ' τₛ (substSpineₙ' τs xₛ τₛ)
 
 --   substSpineₙ' : Spineₙ → Index → Typeₙ → Spineₙ
@@ -87,7 +87,7 @@ mutual
 
   substKindingᵤ : Δ ⊢ᵤ τᵤ ∶ ⋆ → Δ ∋ xₛ ↦ κₛ → Δ \\ xₛ ⊢ₙ τₙₛ ∶ κₛ → Δ \\ xₛ ⊢ₙ substTypeᵤ τᵤ xₛ κₛ τₙₛ ∶ ⋆
   substKindingᵤ {xₛ = xₛ} (⟨_⟩_ {x = x} pₓ ps) pₓₛ pₛ with x ≟ₓ xₛ
-  ... | no ref   with ⟨ x' , refl ⟩ ← lemma-existsWeakenedIndex ref = neu (⟨ strengthenIndexing pₓ ⟩ substKindingSpineₙ ps pₓₛ pₛ)
+  ... | no ref   with ⟨ x' , refl ⟩ ← lemma-inequality-implies-weakening-exists ref = neu (⟨ strengthenIndexing pₓ ⟩ substKindingSpineₙ ps pₓₛ pₛ)
   ... | yes refl with refl ← lookupUniqueness pₓ pₓₛ = applyToKindingSpineₙ pₛ (substKindingSpineₙ ps pₓₛ pₛ)
 
   substKindingSpineₙ : Δ ∣ κ ⊢ₙ τs ∶ κ' → Δ ∋ xₛ ↦ κₛ → Δ \\ xₛ ⊢ₙ τₙₛ ∶ κₛ → Δ \\ xₛ ∣ κ ⊢ₙ substSpineₙ τs xₛ κₛ τₙₛ ∶ κ'

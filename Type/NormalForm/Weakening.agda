@@ -22,6 +22,21 @@ mutual
   weakenSpineAtₙ xᵣ (τₙ ∷ τs) = weakenTypeAtₙ xᵣ τₙ ∷ weakenSpineAtₙ xᵣ τs
 
 
+mutual
+  lemma-weakenTypeAtₙ-commutativity : Δ ⊢ₙ τₙ ∶ κ → xᵣ ≤ xᵣ' → weakenTypeAtₙ xᵣ (weakenTypeAtₙ xᵣ' τₙ) ≡ weakenTypeAtₙ (suc xᵣ') (weakenTypeAtₙ xᵣ τₙ)
+  lemma-weakenTypeAtₙ-commutativity (neu pᵤ)        ≤-p = cong neu (lemma-weakenTypeAtᵤ-commutativity pᵤ ≤-p)
+  lemma-weakenTypeAtₙ-commutativity (fun p₁ p₂)     ≤-p = cong₂ fun (lemma-weakenTypeAtₙ-commutativity p₁ ≤-p) (lemma-weakenTypeAtₙ-commutativity p₂ ≤-p)
+  lemma-weakenTypeAtₙ-commutativity (all {κ = κ} p) ≤-p = cong (all κ) (lemma-weakenTypeAtₙ-commutativity p (s≤s ≤-p))
+  lemma-weakenTypeAtₙ-commutativity (lam {κ = κ} p) ≤-p = cong (lam κ) (lemma-weakenTypeAtₙ-commutativity p (s≤s ≤-p))
+
+  lemma-weakenTypeAtᵤ-commutativity : Δ ⊢ᵤ τᵤ ∶ κ → xᵣ ≤ xᵣ' → weakenTypeAtᵤ xᵣ (weakenTypeAtᵤ xᵣ' τᵤ) ≡ weakenTypeAtᵤ (suc xᵣ') (weakenTypeAtᵤ xᵣ τᵤ)
+  lemma-weakenTypeAtᵤ-commutativity (⟨ pₓ ⟩ ps) ≤-p = cong₂ ⟨_⟩_ (lemma-weakenIndexAt-commutativity pₓ ≤-p) (lemma-weakenSpineAtₙ-commutativity ps ≤-p)
+
+  lemma-weakenSpineAtₙ-commutativity : Δ ∣ κ ⊢ₙ τs ∶ κ' → xᵣ ≤ xᵣ' → weakenSpineAtₙ xᵣ (weakenSpineAtₙ xᵣ' τs) ≡ weakenSpineAtₙ (suc xᵣ') (weakenSpineAtₙ xᵣ τs)
+  lemma-weakenSpineAtₙ-commutativity []       ≤-p = refl
+  lemma-weakenSpineAtₙ-commutativity (p ∷ ps) ≤-p = cong₂ _∷_ (lemma-weakenTypeAtₙ-commutativity p ≤-p) (lemma-weakenSpineAtₙ-commutativity ps ≤-p)
+
+
 --------------------------------------------------------------------------------
 
 mutual

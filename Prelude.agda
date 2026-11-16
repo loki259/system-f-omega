@@ -1,7 +1,8 @@
 module Prelude where
 
 open import Data.Nat public
-  using (suc; zero; _≟_; _+_; _∸_) renaming (ℕ to Nat)
+  using (suc; zero; _≟_; _+_; _∸_; _≤_; z≤n; s≤s; _<_; z<s; s<s; pred) renaming (ℕ to Nat)
+open import Data.Nat.Properties public using (≤-reflexive)
 open import Data.List public
   using (List; []; _∷_; map; length; _++_; _∷ʳ_)
 open import Data.Vec public
@@ -22,7 +23,7 @@ Index = Nat
 
 variable
   m m' n n' : Nat
-  x x' xᵣ xₛ i i' iᵣ iₛ : Index
+  x x' xᵣ xᵣ' xₛ xₛ' : Index
 
 infix 5 _≟ₓ_
 _≟ₓ_ : (x : Index) → (x' : Index) → Dec (x ≡ x')

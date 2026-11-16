@@ -6,8 +6,8 @@ open import Prelude
 open import Type
 open import Type.Context
 open import Type.Kinding
-open import Type.Substitution
-open import Type.Equality
+open import Type.SubstitutionAtZero
+open import Type.EqualityWRTSubstitutionAtZero
 
 
 mutual

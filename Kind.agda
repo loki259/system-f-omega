@@ -10,7 +10,7 @@ data Kind : Set where
   _⇒_ : Kind → Kind → Kind
 
 variable
-  κ κ' κ'' κ₁ κ₁' κ₂ κ₂' κᵣ κₛ : Kind
+  κ κ' κ'' κ₁ κ₁' κ₂ κ₂' κᵣ κᵣ' κₛ κₛ' : Kind
 
 
 ⇒-inj : κ₁ ⇒ κ₂ ≡ κ₁' ⇒ κ₂' → κ₁ ≡ κ₁' × κ₂ ≡ κ₂'

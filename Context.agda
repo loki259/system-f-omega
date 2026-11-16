@@ -123,10 +123,76 @@ _\\_ : Ctx A → Index → Ctx A
 (a ∷ Ψ) \\ zero    = Ψ
 (a ∷ Ψ) \\ (suc x) = a ∷ (Ψ \\ x)
 
+lemma-\\-∷-commutativity : (a ∷ Ψ) \\ suc x ≡ a ∷ (Ψ \\ x)
+lemma-\\-∷-commutativity = refl
+
+lemma-\\-commutativity : x < x' → Ψ \\ x \\ x' ≡ Ψ \\ suc x' \\ x
+lemma-\\-commutativity                           {Ψ = []}    _       = refl
+lemma-\\-commutativity {x = zero}  {x' = suc x'} {Ψ = a ∷ Ψ} _       = refl
+lemma-\\-commutativity {x = suc x} {x' = suc x'} {Ψ = a ∷ Ψ} (s≤s p) = cong (a ∷_) (lemma-\\-commutativity {Ψ = Ψ} p)
+
+lemma-\\-with-consecutive-indices : Ψ ∋ x ↦ a → Ψ ∋ suc x ↦ a → Ψ \\ x ≡ Ψ \\ suc x
+lemma-\\-with-consecutive-indices here               (there here) = refl
+lemma-\\-with-consecutive-indices (there {b = b} pₓ) (there pₛₓ)  = cong (b ∷_) (lemma-\\-with-consecutive-indices pₓ pₛₓ)
+
+
 weakenIndexAt : Index → Index → Index
 weakenIndexAt zero     x       = suc x
 weakenIndexAt (suc _)  zero    = zero
 weakenIndexAt (suc xᵣ) (suc x) = suc (weakenIndexAt xᵣ x)
+
+lemma-inequality-implies-weakening-exists : x ≢ xᵣ → ∃[ x' ] x ≡ weakenIndexAt xᵣ x'
+lemma-inequality-implies-weakening-exists {x = zero}  {xᵣ = zero}   ref with () ← ref refl
+lemma-inequality-implies-weakening-exists {x = zero}  {xᵣ = suc xᵣ} ref = ⟨ zero , refl ⟩
+lemma-inequality-implies-weakening-exists {x = suc x} {xᵣ = zero}   ref = ⟨ x , refl ⟩
+lemma-inequality-implies-weakening-exists {x = suc x} {xᵣ = suc xᵣ} ref with x ≟ₓ xᵣ
+... | no ref'  = Σ-map suc (cong suc) (lemma-inequality-implies-weakening-exists ref')
+... | yes refl with () ← ref refl
+
+lemma-weakening-implies-inequality : x ≡ weakenIndexAt xᵣ x' → x ≢ xᵣ
+lemma-weakening-implies-inequality {x = zero}  {xᵣ = zero}                 ()
+lemma-weakening-implies-inequality {x = zero}  {xᵣ = suc xᵣ}               _  = λ ()
+lemma-weakening-implies-inequality {x = suc x} {xᵣ = zero}                 _  = λ ()
+lemma-weakening-implies-inequality {x = suc x} {xᵣ = suc xᵣ} {x' = zero}   ()
+lemma-weakening-implies-inequality {x = suc x} {xᵣ = suc xᵣ} {x' = suc x'} eq
+  = λ eq' → lemma-weakening-implies-inequality {x = x} {xᵣ = xᵣ} {x' = x'} (cong pred eq) (cong pred eq')
+
+lemma-\\-commutativity' : x ≤ x' → Ψ \\ x \\ x' ≡ Ψ \\ weakenIndexAt x x' \\ x
+lemma-\\-commutativity'                           {Ψ = []}    _       = refl
+lemma-\\-commutativity' {x = zero}                {Ψ = a ∷ Ψ} _       = refl
+lemma-\\-commutativity' {x = suc x} {x' = suc x'} {Ψ = a ∷ Ψ} (s≤s p) = cong (a ∷_) (lemma-\\-commutativity' {Ψ = Ψ} p)
+
+lemma-weakenIndexAt-with-consecutive-indices : weakenIndexAt (suc xᵣ) x ≢ xᵣ → Ψ ∋ xᵣ ↦ a → Ψ ∋ suc xᵣ ↦ a → weakenIndexAt xᵣ x ≡ weakenIndexAt (suc xᵣ) x
+lemma-weakenIndexAt-with-consecutive-indices {x = zero} ref  here        (there here) with () ← ref refl
+lemma-weakenIndexAt-with-consecutive-indices {x = suc x} _   here        (there here) = refl
+lemma-weakenIndexAt-with-consecutive-indices {x = zero}  _   (there pₓᵣ) (there pₛₓᵣ) = refl
+lemma-weakenIndexAt-with-consecutive-indices {x = suc x} ref (there pₓᵣ) (there pₛₓᵣ) = cong suc (lemma-weakenIndexAt-with-consecutive-indices (ref ∘ cong suc) pₓᵣ pₛₓᵣ)
+
+lemma-weakenIndexAt-injectivity : weakenIndexAt xᵣ x ≡ weakenIndexAt xᵣ x' → x ≡ x'
+lemma-weakenIndexAt-injectivity               {x = zero}  {x' = zero}   refl = refl
+lemma-weakenIndexAt-injectivity {xᵣ = zero}   {x = zero}  {x' = suc x'} ()
+lemma-weakenIndexAt-injectivity {xᵣ = suc xᵣ} {x = zero}  {x' = suc x'} ()
+lemma-weakenIndexAt-injectivity {xᵣ = zero}   {x = suc x} {x' = zero}   ()
+lemma-weakenIndexAt-injectivity {xᵣ = suc xᵣ} {x = suc x} {x' = zero}   ()
+lemma-weakenIndexAt-injectivity {xᵣ = zero}   {x = suc x} {x' = suc x'} eq   = cong pred eq
+lemma-weakenIndexAt-injectivity {xᵣ = suc xᵣ} {x = suc x} {x' = suc x'} eq   = cong suc (lemma-weakenIndexAt-injectivity (cong pred eq))
+
+lemma-weakenIndexAt-identity : x ≤ xᵣ → weakenIndexAt (suc xᵣ) x ≡ x
+lemma-weakenIndexAt-identity {x = zero}                _          = refl
+lemma-weakenIndexAt-identity {x = suc x} {xᵣ = suc xᵣ} (s≤s x≤xᵣ) = cong suc (lemma-weakenIndexAt-identity x≤xᵣ)
+
+lemma-weakenIndexAt-commutativity : Ψ ∋ x ↦ a → xᵣ ≤ xᵣ' → weakenIndexAt xᵣ (weakenIndexAt xᵣ' x) ≡ weakenIndexAt (suc xᵣ') (weakenIndexAt xᵣ x)
+lemma-weakenIndexAt-commutativity here      z≤n       = refl
+lemma-weakenIndexAt-commutativity here      (s≤s ≤-p) = refl
+lemma-weakenIndexAt-commutativity (there p) z≤n       = refl
+lemma-weakenIndexAt-commutativity (there p) (s≤s ≤-p) = cong suc (lemma-weakenIndexAt-commutativity p ≤-p)
+
+-- lemma : weakenIndexAt (weakenIndexAt xᵣ xᵣ') (weakenIndexAt xᵣ x) ≡ weakenIndexAt (weakenIndexAt (weakenIndexAt xᵣ xᵣ') xᵣ) x' → weakenIndexAt xᵣ' x ≡ x'
+-- lemma = {!   !}
+
+-- lemma' : weakenIndexAt (weakenIndexAt xᵣ xᵣ') (weakenIndexAt xᵣ x) ≡ weakenIndexAt (weakenIndexAt (weakenIndexAt xᵣ xᵣ') xᵣ) (weakenIndexAt xᵣ' x)
+-- lemma' = ?
+
 
 --------------------------------------------------------------------------------
 
@@ -152,14 +218,6 @@ strengthenIndexingAt {x = suc x} zero     (there p) = p
 strengthenIndexingAt {x = zero}  (suc _)  here      = here
 strengthenIndexingAt {x = suc x} (suc xᵣ) (there p) = there (strengthenIndexingAt xᵣ p)
 
-lemma-existsWeakenedIndex : x ≢ xᵣ → ∃[ x' ] x ≡ weakenIndexAt xᵣ x'
-lemma-existsWeakenedIndex {x = zero}  {xᵣ = zero}   ref with () ← ref refl
-lemma-existsWeakenedIndex {x = zero}  {xᵣ = suc xᵣ} ref = ⟨ zero , refl ⟩
-lemma-existsWeakenedIndex {x = suc x} {xᵣ = zero}   ref = ⟨ x , refl ⟩
-lemma-existsWeakenedIndex {x = suc x} {xᵣ = suc xᵣ} ref with x ≟ₓ xᵣ
-... | no ref'  = Σ-map suc (cong suc) (lemma-existsWeakenedIndex ref')
-... | yes refl with () ← ref refl
-
 
 -- data _⊢_↦_≡ₓ_↦_ (Ψ : Ctx A) : Index → A → Index → A → Set where
 --   -- weakened : Ψ ∋ x ↦ a → Ψ \\ x ∋ x' ↦ a' → Ψ ⊢ x ↦ a ≡ₓ weakenIndex x x' ↦ a'
@@ -167,4 +225,3 @@ lemma-existsWeakenedIndex {x = suc x} {xᵣ = suc xᵣ} ref with x ≟ₓ xᵣ
 --   refl     : Ψ ∋ x ↦ a → Ψ ⊢ x ↦ a ≡ₓ x ↦ a
 
 -- postulate checkIndexingEquality : Ψ ∋ x ↦ a → Ψ ∋ x' ↦ a' → Dec (x ≡ x' × a ≡ a')
-
